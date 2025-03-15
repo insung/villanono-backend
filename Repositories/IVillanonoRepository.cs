@@ -1,4 +1,4 @@
-interface IVillanonoRepository
+public interface IVillanonoRepository
 {
     ValueTask Ping();
 
