@@ -35,3 +35,22 @@ public class VillanonoStringConverter : DefaultTypeConverter
             return text;
     }
 }
+
+public class VillanonoIntConverter : DefaultTypeConverter
+{
+    public override object? ConvertFromString(
+        string? text,
+        IReaderRow row,
+        MemberMapData memberMapData
+    )
+    {
+        if (string.IsNullOrWhiteSpace(text) || text == "-")
+            return null;
+        else if (int.TryParse(text, out int value))
+        {
+            return value;
+        }
+
+        throw new TypeConverterException(this, memberMapData, text, row.Context);
+    }
+}

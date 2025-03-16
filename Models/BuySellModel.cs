@@ -54,7 +54,7 @@ public class BuySellModel
     public string RoadName { get; set; } // "도로명"
 
     [Name("release_reason_date")]
-    public DateTime? ReleaseReasonDate { get; set; } // "해제사유발생일"
+    public int? ReleaseReasonDate { get; set; } // "해제사유발생일"
 
     [Name("transaction_type")]
     public string? TransactionType { get; set; } // "거래유형"

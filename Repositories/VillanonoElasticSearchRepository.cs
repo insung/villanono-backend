@@ -21,33 +21,13 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
     public async ValueTask Ping()
     {
         var response = await elasticsearchClient.PingAsync();
-
-        if (
-            !tryGetElasticSearchApiResponseCode(
-                response,
-                out HttpStatusCode responseCode,
-                out Exception? innerException
-            )
-        )
-        {
-            throw new HttpRequestException("Ping failed", innerException, responseCode);
-        }
+        CheckResponseFailed(response, "Ping failed");
     }
 
-    public async ValueTask CreateDefaultDatabase()
+    public async ValueTask CreateIndex(string indexName)
     {
-        var response = await elasticsearchClient.Indices.CreateAsync(this.defaultIndex);
-
-        if (
-            !tryGetElasticSearchApiResponseCode(
-                response,
-                out HttpStatusCode responseCode,
-                out Exception? innerException
-            )
-        )
-        {
-            throw new HttpRequestException("Create Database failed", innerException, responseCode);
-        }
+        var response = await elasticsearchClient.Indices.CreateAsync(indexName);
+        CheckResponseFailed(response, "Create Index failed");
     }
 
     private bool tryGetElasticSearchApiResponseCode(
@@ -68,6 +48,23 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
         return responseCode == HttpStatusCode.OK;
     }
 
+    private void CheckResponseFailed(
+        ElasticsearchResponse elasticsearchResponse,
+        string failedMessage
+    )
+    {
+        if (
+            !tryGetElasticSearchApiResponseCode(
+                elasticsearchResponse,
+                out HttpStatusCode responseCode,
+                out Exception? innerException
+            )
+        )
+        {
+            throw new HttpRequestException(failedMessage, innerException, responseCode);
+        }
+    }
+
     public async Task BulkInsert<T>(List<T> records, string? indexName = null)
     {
         if (string.IsNullOrWhiteSpace(indexName))
@@ -84,15 +81,18 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
         };
 
         var response = await elasticsearchClient.BulkAsync(bulkRequest);
-        if (
-            !tryGetElasticSearchApiResponseCode(
-                response,
-                out HttpStatusCode responseCode,
-                out Exception? innerException
-            )
-        )
-        {
-            throw new HttpRequestException("BulkInsert failed", innerException, responseCode);
-        }
+        CheckResponseFailed(response, "BulkInsert failed");
+    }
+
+    public async ValueTask<bool> HasIndex(string indexName)
+    {
+        var response = await elasticsearchClient.Indices.ExistsAsync(indexName);
+        return response.Exists;
+    }
+
+    public async ValueTask DeleteIndex(string indexName)
+    {
+        var response = await elasticsearchClient.Indices.DeleteAsync(indexName);
+        CheckResponseFailed(response, "DeleteIndex failed");
     }
 }
