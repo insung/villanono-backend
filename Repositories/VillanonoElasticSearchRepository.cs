@@ -1,5 +1,6 @@
 using System.Net;
 using Elastic.Clients.Elasticsearch;
+using Elastic.Clients.Elasticsearch.Core.Bulk;
 using Elastic.Transport.Products.Elasticsearch;
 using Microsoft.Extensions.Options;
 
@@ -14,7 +15,7 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
     )
     {
         this.elasticsearchClient = elasticsearchClient;
-        this.defaultIndex = elasticSearchSettings.Value.DefaultIndex;
+        defaultIndex = elasticSearchSettings.Value.DefaultIndex;
     }
 
     public async ValueTask Ping()
@@ -65,5 +66,33 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
             );
         }
         return responseCode == HttpStatusCode.OK;
+    }
+
+    public async Task BulkInsert<T>(List<T> records, string? indexName = null)
+    {
+        if (string.IsNullOrWhiteSpace(indexName))
+        {
+            indexName = defaultIndex;
+        }
+
+        var bulkRequest = new BulkRequest(indexName)
+        {
+            Operations = records
+                .Select(record => new BulkIndexOperation<T>(record))
+                .Cast<IBulkOperation>()
+                .ToList(),
+        };
+
+        var response = await elasticsearchClient.BulkAsync(bulkRequest);
+        if (
+            !tryGetElasticSearchApiResponseCode(
+                response,
+                out HttpStatusCode responseCode,
+                out Exception? innerException
+            )
+        )
+        {
+            throw new HttpRequestException("BulkInsert failed", innerException, responseCode);
+        }
     }
 }
