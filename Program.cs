@@ -20,7 +20,8 @@ builder.Services.AddSingleton(sp =>
 });
 
 builder.Services.AddScoped<IVillanonoRepository, VillanonoElasticSearchRepository>();
-builder.Services.AddScoped<IVillanonoLoadService, VillanonoDataService>();
+builder.Services.AddScoped<IVillanonoDataService, BuySellDataService>();
+builder.Services.AddScoped<IRepositoryService, RepositoryService>();
 builder.Services.AddControllers();
 
 // Swagger 서비스 추가

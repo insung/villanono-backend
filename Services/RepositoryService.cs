@@ -3,12 +3,12 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.Extensions.Options;
 
-public class VillanonoDataService : IVillanonoLoadService
+public class RepositoryService : IRepositoryService
 {
     readonly IVillanonoRepository villanonoRepository;
     readonly int batchSize;
 
-    public VillanonoDataService(
+    public RepositoryService(
         IVillanonoRepository villanonoRepository,
         IOptions<ElasticSearchSettingsModel> elasticSearchSettings
     )
@@ -17,7 +17,7 @@ public class VillanonoDataService : IVillanonoLoadService
         batchSize = elasticSearchSettings.Value.BatchSize;
     }
 
-    public async ValueTask RepositoryHealthCheck()
+    public async ValueTask HealthCheck()
     {
         await villanonoRepository.Ping();
     }

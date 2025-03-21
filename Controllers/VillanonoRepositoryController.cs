@@ -4,24 +4,24 @@ using Microsoft.AspNetCore.Mvc;
 [Route("api/[controller]")]
 public class VillanonoRepositoryController : ControllerBase
 {
-    readonly IVillanonoLoadService villanonoDataService;
+    readonly IRepositoryService repositoryService;
 
-    public VillanonoRepositoryController(IVillanonoLoadService villanonoDataService)
+    public VillanonoRepositoryController(IRepositoryService repositoryService)
     {
-        this.villanonoDataService = villanonoDataService;
+        this.repositoryService = repositoryService;
     }
 
     [HttpGet("Ping")]
     public async Task<IActionResult> Ping()
     {
-        await villanonoDataService.RepositoryHealthCheck();
+        await repositoryService.HealthCheck();
         return Ok();
     }
 
     [HttpPost("CreateDefaultIndex")]
     public async Task<IActionResult> CreateDefaultIndex()
     {
-        await villanonoDataService.CreateIndex("villanono");
+        await repositoryService.CreateIndex("villanono");
         return Ok();
     }
 
@@ -42,12 +42,9 @@ public class VillanonoRepositoryController : ControllerBase
         var indexName = $"villanono-{indexNameSuffix}";
 
         if (dataType == VillanonoDataType.BuySell)
-            totalRowAffected = await villanonoDataService.BulkInsert<BuySellModel>(
-                stream,
-                indexName
-            );
+            totalRowAffected = await repositoryService.BulkInsert<BuySellModel>(stream, indexName);
         else
-            totalRowAffected = await villanonoDataService.BulkInsert<RentModel>(stream, indexName);
+            totalRowAffected = await repositoryService.BulkInsert<RentModel>(stream, indexName);
 
         return Ok($"{totalRowAffected} row affected");
     }
@@ -55,14 +52,14 @@ public class VillanonoRepositoryController : ControllerBase
     [HttpPost("{indexName}")]
     public async Task<IActionResult> CreateIndex(string indexName)
     {
-        await villanonoDataService.CreateIndex(indexName);
+        await repositoryService.CreateIndex(indexName);
         return Ok();
     }
 
     [HttpDelete("{indexName}")]
     public async Task<IActionResult> DeleteIndex(string indexName)
     {
-        await villanonoDataService.DeleteIndex(indexName);
+        await repositoryService.DeleteIndex(indexName);
         return Ok();
     }
 }

@@ -1,6 +1,7 @@
 using System.Net;
 using Elastic.Clients.Elasticsearch;
 using Elastic.Clients.Elasticsearch.Core.Bulk;
+using Elastic.Clients.Elasticsearch.QueryDsl;
 using Elastic.Transport.Products.Elasticsearch;
 using Microsoft.Extensions.Options;
 
@@ -94,5 +95,36 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
     {
         var response = await elasticsearchClient.Indices.DeleteAsync(indexName);
         CheckResponseFailed(response, "DeleteIndex failed");
+    }
+
+    public async Task<IReadOnlyCollection<T>> GetData<T>(
+        string indexName,
+        int beginDate,
+        int endDate,
+        string dong,
+        string gu,
+        string si = "서울특별시"
+    )
+    {
+        var searchRequest = new SearchRequest(indexName)
+        {
+            Query = new BoolQuery
+            {
+                Must = new List<Query>
+                {
+                    new TermQuery("dong") { Value = dong },
+                    new TermQuery("gu") { Value = gu },
+                    new TermQuery("si") { Value = si },
+                    new DateRangeQuery("contractDate")
+                    {
+                        Gte = beginDate.ToString(),
+                        Lte = endDate.ToString(),
+                    },
+                },
+            },
+        };
+
+        var response = await elasticsearchClient.SearchAsync<T>(searchRequest);
+        return response.Documents;
     }
 }
