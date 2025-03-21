@@ -2,11 +2,11 @@ using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("api/[controller]")]
-public class VillanonoRepositoryController : ControllerBase
+public class RepositoryController : ControllerBase
 {
     readonly IRepositoryService repositoryService;
 
-    public VillanonoRepositoryController(IRepositoryService repositoryService)
+    public RepositoryController(IRepositoryService repositoryService)
     {
         this.repositoryService = repositoryService;
     }

@@ -1,4 +1,4 @@
-public interface IVillanonoDataService
+public interface IDataService
 {
     Task<IReadOnlyCollection<T>> GetData<T>(
         int beginDate,

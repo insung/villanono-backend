@@ -20,7 +20,7 @@ builder.Services.AddSingleton(sp =>
 });
 
 builder.Services.AddScoped<IVillanonoRepository, VillanonoElasticSearchRepository>();
-builder.Services.AddScoped<IVillanonoDataService, BuySellDataService>();
+builder.Services.AddScoped<IDataService, DataService>();
 builder.Services.AddScoped<IRepositoryService, RepositoryService>();
 builder.Services.AddControllers();
 

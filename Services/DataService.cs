@@ -1,8 +1,8 @@
-public class BuySellDataService : IVillanonoDataService
+public class DataService : IDataService
 {
     readonly IVillanonoRepository villanonoRepository;
 
-    public BuySellDataService(IVillanonoRepository villanonoRepository)
+    public DataService(IVillanonoRepository villanonoRepository)
     {
         this.villanonoRepository = villanonoRepository;
     }
