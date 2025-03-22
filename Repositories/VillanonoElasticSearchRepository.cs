@@ -9,14 +9,17 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
 {
     readonly ElasticsearchClient elasticsearchClient;
     readonly string defaultIndex;
+    readonly AlternativeElasticsearchClient alternativeElasticsearchClient;
 
     public VillanonoElasticSearchRepository(
         ElasticsearchClient elasticsearchClient,
-        IOptions<ElasticSearchSettingsModel> elasticSearchSettings
+        IOptions<ElasticSearchSettingsModel> elasticSearchSettings,
+        AlternativeElasticsearchClient alternativeElasticsearchClient
     )
     {
         this.elasticsearchClient = elasticsearchClient;
         defaultIndex = elasticSearchSettings.Value.DefaultIndex;
+        this.alternativeElasticsearchClient = alternativeElasticsearchClient;
     }
 
     public async ValueTask Ping()
@@ -98,12 +101,13 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
     }
 
     public async Task<IReadOnlyCollection<T>> GetData<T>(
-        string indexName,
+        VillanonoDataType dataType,
         int beginDate,
         int endDate,
         string dong,
         string gu,
-        string si = "서울특별시"
+        string si = "서울특별시",
+        string indexName = "villanono-*"
     )
     {
         var searchRequest = new SearchRequest(indexName)
@@ -112,6 +116,7 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
             {
                 Must = new List<Query>
                 {
+                    new TermQuery("dataType") { Value = dataType.ToString() },
                     new TermQuery("dong") { Value = dong },
                     new TermQuery("gu") { Value = gu },
                     new TermQuery("si") { Value = si },
@@ -126,5 +131,55 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
 
         var response = await elasticsearchClient.SearchAsync<T>(searchRequest);
         return response.Documents;
+    }
+
+    public async Task<ESStatisticsSummaryResponse> GetStatisticsSummary(
+        VillanonoDataType dataType,
+        int beginDate,
+        int endDate,
+        string dong,
+        string gu,
+        string si = "서울특별시",
+        string indexName = "villanono-*"
+    )
+    {
+        // var groupByKey = Aggregation.Terms(new TermsAggregation { Field = "contractYearMonth" });
+        // groupByKey.Aggregations = new Dictionary<string, Aggregation>
+        // {
+        //     {
+        //         "average",
+        //         new AverageAggregation { Field = "transactionAmount" }
+        //     },
+        // };
+        // var searchRequest = new SearchRequest(indexName)
+        // {
+        //     Query = new BoolQuery
+        //     {
+        //         Must = new List<Query>
+        //         {
+        //             new TermQuery("dataType") { Value = dataType.ToString() },
+        //             new TermQuery("dong") { Value = dong },
+        //             new TermQuery("gu") { Value = gu },
+        //             new TermQuery("si") { Value = si },
+        //             new DateRangeQuery("contractDate")
+        //             {
+        //                 Gte = beginDate.ToString(),
+        //                 Lte = endDate.ToString(),
+        //             },
+        //         },
+        //     },
+        //     Aggregations = new Dictionary<string, Aggregation> { { "key", groupByKey } },
+        // };
+
+        // var response = await elasticsearchClient.SearchAsync<object>(searchRequest);
+
+        return await alternativeElasticsearchClient.GetStatisticsSummary(
+            dataType,
+            beginDate,
+            endDate,
+            dong,
+            gu,
+            si
+        );
     }
 }

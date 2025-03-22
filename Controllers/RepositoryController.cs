@@ -18,6 +18,9 @@ public class RepositoryController : ControllerBase
         return Ok();
     }
 
+    [Obsolete(
+        "Default Index 가 만들어지게 되면 Field 들이 없기 때문에 추후 입력될 Index 들과의 충돌이 발생할 수 있기 때문에 Deprecated 되었습니다."
+    )]
     [HttpPost("CreateDefaultIndex")]
     public async Task<IActionResult> CreateDefaultIndex()
     {

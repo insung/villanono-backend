@@ -19,6 +19,12 @@ builder.Services.AddSingleton(sp =>
     return new ElasticsearchClient(clientSettings);
 });
 
+builder.Services.AddSingleton(sp =>
+{
+    var settings = sp.GetRequiredService<IOptions<ElasticSearchSettingsModel>>().Value;
+    return new AlternativeElasticsearchClient(settings.URL, settings.ApiKey);
+});
+
 builder.Services.AddScoped<IVillanonoRepository, VillanonoElasticSearchRepository>();
 builder.Services.AddScoped<IDataService, DataService>();
 builder.Services.AddScoped<IRepositoryService, RepositoryService>();

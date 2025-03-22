@@ -6,11 +6,21 @@ public interface IVillanonoRepository
     ValueTask<bool> HasIndex(string indexName);
     ValueTask DeleteIndex(string indexName);
     Task<IReadOnlyCollection<T>> GetData<T>(
-        string indexName,
+        VillanonoDataType dataType,
         int beginDate,
         int endDate,
         string dong,
         string gu,
-        string si = "서울특별시"
+        string si = "서울특별시",
+        string indexName = "villanono-*"
+    );
+    Task<ESStatisticsSummaryResponse> GetStatisticsSummary(
+        VillanonoDataType dataType,
+        int beginDate,
+        int endDate,
+        string dong,
+        string gu,
+        string si = "서울특별시",
+        string indexName = "villanono-*"
     );
 }

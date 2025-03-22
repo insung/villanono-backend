@@ -2,5 +2,8 @@
     "editor.formatOnSave": true,
     "[csharp]": {
         "editor.defaultFormatter": "csharpier.csharpier-vscode"
+    },
+    "workbench.colorCustomizations": {
+        "tab.activeBackground": "#0a4963" // 선택된 탭 배경색
     }
 }

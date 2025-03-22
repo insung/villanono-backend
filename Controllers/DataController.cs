@@ -21,20 +21,28 @@ public class DataController : ControllerBase
         [FromQuery] string si = "서울특별시"
     )
     {
-        if (dataType == VillanonoDataType.BuySell)
-        {
-            var buySellModels = await villanonoDataService.GetData<BuySellModel>(
-                beginDate,
-                endDate,
-                dong,
-                gu,
-                si
-            );
-            return Ok(buySellModels);
-        }
-        else
-        {
-            return Ok();
-        }
+        var models = await villanonoDataService.GetData(dataType, beginDate, endDate, dong, gu, si);
+        return Ok(models);
+    }
+
+    [HttpGet("StatisticalSummary/{dataType}")]
+    public async Task<IActionResult> GetVolumeAndAverage(
+        VillanonoDataType dataType,
+        [FromQuery] int beginDate,
+        [FromQuery] int endDate,
+        [FromQuery] string dong,
+        [FromQuery] string gu,
+        [FromQuery] string si = "서울특별시"
+    )
+    {
+        var statisticsSummary = await villanonoDataService.GetStatisticsSummary(
+            dataType,
+            beginDate,
+            endDate,
+            dong,
+            gu,
+            si
+        );
+        return Ok(statisticsSummary);
     }
 }
