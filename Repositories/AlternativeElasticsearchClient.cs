@@ -6,7 +6,7 @@ public class AlternativeElasticsearchClient
     string BaseURL { get; set; }
     HttpClient httpClient { get; }
 
-    public AlternativeElasticsearchClient(string url, string apiKey)
+    public AlternativeElasticsearchClient(string url, string? apiKey)
     {
         BaseURL = url;
         var handler = new HttpClientHandler
@@ -15,7 +15,9 @@ public class AlternativeElasticsearchClient
                 true,
         };
         httpClient = new HttpClient(handler);
-        httpClient.DefaultRequestHeaders.Add("Authorization", $"ApiKey {apiKey}");
+
+        if (apiKey != null)
+            httpClient.DefaultRequestHeaders.Add("Authorization", $"ApiKey {apiKey}");
     }
 
     public async Task<ESStatisticsSummaryResponse> GetStatisticsSummary(

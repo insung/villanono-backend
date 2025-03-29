@@ -29,6 +29,7 @@ public class RepositoryService : IRepositoryService
     }
 
     public async Task<int> BulkInsert<T>(Stream stream, string indexName)
+        where T : VillanonoBaseModel
     {
         var totalRowAffected = 0;
         var records = new List<T>();

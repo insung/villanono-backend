@@ -2,7 +2,8 @@ public interface IVillanonoRepository
 {
     ValueTask Ping();
     ValueTask CreateIndex(string indexName);
-    Task BulkInsert<T>(List<T> records, string? indexName = null);
+    Task BulkInsert<T>(List<T> records, string? indexName = null)
+        where T : VillanonoBaseModel;
     ValueTask<bool> HasIndex(string indexName);
     ValueTask DeleteIndex(string indexName);
     Task<IReadOnlyCollection<T>> GetData<T>(
@@ -13,8 +14,9 @@ public interface IVillanonoRepository
         string gu,
         string si = "서울특별시",
         string indexName = "villanono-*"
-    );
-    Task<ESStatisticsSummaryResponse> GetStatisticsSummary(
+    )
+        where T : VillanonoBaseModel;
+    Task<StatisticalSummary> GetStatisticsSummary(
         VillanonoDataType dataType,
         int beginDate,
         int endDate,

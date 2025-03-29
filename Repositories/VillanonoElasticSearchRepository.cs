@@ -1,65 +1,68 @@
 using System.Net;
-using Elastic.Clients.Elasticsearch;
-using Elastic.Clients.Elasticsearch.Core.Bulk;
-using Elastic.Clients.Elasticsearch.QueryDsl;
-using Elastic.Transport.Products.Elasticsearch;
 using Microsoft.Extensions.Options;
+using OpenSearch.Client;
 
 public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
 {
-    readonly ElasticsearchClient elasticsearchClient;
+    readonly OpenSearchClient opensearchClient;
     readonly string defaultIndex;
-    readonly AlternativeElasticsearchClient alternativeElasticsearchClient;
 
     public VillanonoElasticSearchRepository(
-        ElasticsearchClient elasticsearchClient,
-        IOptions<ElasticSearchSettingsModel> elasticSearchSettings,
-        AlternativeElasticsearchClient alternativeElasticsearchClient
+        OpenSearchClient elasticsearchClient,
+        IOptions<ElasticSearchSettingsModel> elasticSearchSettings
     )
     {
-        this.elasticsearchClient = elasticsearchClient;
+        this.opensearchClient = elasticsearchClient;
         defaultIndex = elasticSearchSettings.Value.DefaultIndex;
-        this.alternativeElasticsearchClient = alternativeElasticsearchClient;
     }
 
     public async ValueTask Ping()
     {
-        var response = await elasticsearchClient.PingAsync();
-        CheckResponseFailed(response, "Ping failed");
+        var response = await opensearchClient.PingAsync();
+        CheckResponseFailed(
+            response?.ApiCall?.HttpStatusCode,
+            response?.ApiCall?.DebugInformation,
+            "Ping failed"
+        );
     }
 
     public async ValueTask CreateIndex(string indexName)
     {
-        var response = await elasticsearchClient.Indices.CreateAsync(indexName);
-        CheckResponseFailed(response, "Create Index failed");
+        var response = await opensearchClient.Indices.CreateAsync(indexName);
+        CheckResponseFailed(
+            response?.ApiCall?.HttpStatusCode,
+            response?.ApiCall?.DebugInformation,
+            "Create Index failed"
+        );
     }
 
     private bool tryGetElasticSearchApiResponseCode(
-        ElasticsearchResponse elasticsearchResponse,
+        int? httpStatusCode,
+        string? debugInformation,
         out HttpStatusCode responseCode,
         out Exception? innerException
     )
     {
         innerException = null;
-        var apiCallResponseCode = elasticsearchResponse?.ApiCallDetails?.HttpStatusCode ?? 500;
+        var apiCallResponseCode = httpStatusCode ?? 500;
         responseCode = (HttpStatusCode)apiCallResponseCode;
         if (responseCode != HttpStatusCode.OK)
         {
-            innerException = new Exception(
-                elasticsearchResponse?.ApiCallDetails?.DebugInformation ?? ""
-            );
+            innerException = new Exception(debugInformation ?? "");
         }
         return responseCode == HttpStatusCode.OK;
     }
 
     private void CheckResponseFailed(
-        ElasticsearchResponse elasticsearchResponse,
+        int? httpStatusCode,
+        string? debugInformation,
         string failedMessage
     )
     {
         if (
             !tryGetElasticSearchApiResponseCode(
-                elasticsearchResponse,
+                httpStatusCode,
+                debugInformation,
                 out HttpStatusCode responseCode,
                 out Exception? innerException
             )
@@ -70,37 +73,81 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
     }
 
     public async Task BulkInsert<T>(List<T> records, string? indexName = null)
+        where T : VillanonoBaseModel
     {
         if (string.IsNullOrWhiteSpace(indexName))
         {
             indexName = defaultIndex;
         }
 
-        var bulkRequest = new BulkRequest(indexName)
-        {
-            Operations = records
-                .Select(record => new BulkIndexOperation<T>(record))
-                .Cast<IBulkOperation>()
-                .ToList(),
-        };
-
-        var response = await elasticsearchClient.BulkAsync(bulkRequest);
-        CheckResponseFailed(response, "BulkInsert failed");
+        var response = await opensearchClient.BulkAsync(b => b.Index(indexName).IndexMany(records));
+        CheckResponseFailed(
+            response?.ApiCall?.HttpStatusCode,
+            response?.ApiCall?.DebugInformation,
+            "BulkInsert failed"
+        );
     }
 
     public async ValueTask<bool> HasIndex(string indexName)
     {
-        var response = await elasticsearchClient.Indices.ExistsAsync(indexName);
+        var response = await opensearchClient.Indices.ExistsAsync(indexName);
         return response.Exists;
     }
 
     public async ValueTask DeleteIndex(string indexName)
     {
-        var response = await elasticsearchClient.Indices.DeleteAsync(indexName);
-        CheckResponseFailed(response, "DeleteIndex failed");
+        var response = await opensearchClient.Indices.DeleteAsync(indexName);
+        CheckResponseFailed(
+            response?.ApiCall?.HttpStatusCode,
+            response?.ApiCall?.DebugInformation,
+            "DeleteIndex failed"
+        );
     }
 
     public async Task<IReadOnlyCollection<T>> GetData<T>(
+        VillanonoDataType dataType,
+        int beginDate,
+        int endDate,
+        string dong,
+        string gu,
+        string si = "서울특별시",
+        string indexName = "villanono-*"
+    )
+        where T : VillanonoBaseModel
+    {
+        var searchRequest = new SearchRequest(indexName)
+        {
+            Query = new BoolQuery
+            {
+                Must = new QueryContainer[]
+                {
+                    new TermQuery { Field = Infer.Field<T>(f => f.DataType), Value = dataType },
+                    new MatchQuery { Field = Infer.Field<T>(f => f.Dong), Query = dong },
+                    new MatchQuery { Field = Infer.Field<T>(f => f.Gu), Query = gu },
+                    new MatchQuery { Field = Infer.Field<T>(f => f.Si), Query = si },
+                },
+                Filter = new QueryContainer[]
+                {
+                    new DateRangeQuery
+                    {
+                        Field = Infer.Field<T>(f => f.ContractDate),
+                        GreaterThanOrEqualTo = beginDate.ToString(),
+                        LessThanOrEqualTo = endDate.ToString(),
+                    },
+                },
+            },
+        };
+
+        var response = await opensearchClient.SearchAsync<T>(searchRequest);
+        CheckResponseFailed(
+            response?.ApiCall?.HttpStatusCode,
+            response?.ApiCall?.DebugInformation,
+            "GetData Failed"
+        );
+        return response?.Documents ?? Array.Empty<T>();
+    }
+
+    public async Task<StatisticalSummary> GetStatisticsSummary(
         VillanonoDataType dataType,
         int beginDate,
         int endDate,
@@ -114,72 +161,62 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
         {
             Query = new BoolQuery
             {
-                Must = new List<Query>
+                Must = new QueryContainer[]
                 {
-                    new TermQuery("dataType") { Value = dataType.ToString() },
-                    new TermQuery("dong") { Value = dong },
-                    new TermQuery("gu") { Value = gu },
-                    new TermQuery("si") { Value = si },
-                    new DateRangeQuery("contractDate")
+                    new TermQuery { Field = "dataType", Value = dataType },
+                    new MatchQuery { Field = "dong", Query = dong },
+                    new MatchQuery { Field = "gu", Query = gu },
+                    new MatchQuery { Field = "si", Query = si },
+                },
+                Filter = new QueryContainer[]
+                {
+                    new DateRangeQuery
                     {
-                        Gte = beginDate.ToString(),
-                        Lte = endDate.ToString(),
+                        Field = "contractDate",
+                        GreaterThanOrEqualTo = beginDate.ToString(),
+                        LessThanOrEqualTo = endDate.ToString(),
                     },
                 },
             },
+            Aggregations = new AggregationDictionary
+            {
+                {
+                    "contractDateGroup",
+                    new HistogramAggregation("contractDateGroup")
+                    {
+                        Field = "contractDate",
+                        Interval = 1,
+                        Aggregations = new AggregationDictionary
+                        {
+                            { "stats", new StatsAggregation("stats", "transactionAmount") },
+                            {
+                                "percentiles",
+                                new PercentilesAggregation("percentiles", "transactionAmount")
+                                {
+                                    Percents = new[] { 25.0, 50.0, 75.0 },
+                                }
+                            },
+                        },
+                    }
+                },
+                { "totalStats", new StatsAggregation("totalStats", "transactionAmount") },
+            },
+            Size = 0,
         };
 
-        var response = await elasticsearchClient.SearchAsync<T>(searchRequest);
-        return response.Documents;
-    }
+        var response = await opensearchClient.SearchAsync<object>(searchRequest);
 
-    public async Task<ESStatisticsSummaryResponse> GetStatisticsSummary(
-        VillanonoDataType dataType,
-        int beginDate,
-        int endDate,
-        string dong,
-        string gu,
-        string si = "서울특별시",
-        string indexName = "villanono-*"
-    )
-    {
-        // var groupByKey = Aggregation.Terms(new TermsAggregation { Field = "contractYearMonth" });
-        // groupByKey.Aggregations = new Dictionary<string, Aggregation>
-        // {
-        //     {
-        //         "average",
-        //         new AverageAggregation { Field = "transactionAmount" }
-        //     },
-        // };
-        // var searchRequest = new SearchRequest(indexName)
-        // {
-        //     Query = new BoolQuery
-        //     {
-        //         Must = new List<Query>
-        //         {
-        //             new TermQuery("dataType") { Value = dataType.ToString() },
-        //             new TermQuery("dong") { Value = dong },
-        //             new TermQuery("gu") { Value = gu },
-        //             new TermQuery("si") { Value = si },
-        //             new DateRangeQuery("contractDate")
-        //             {
-        //                 Gte = beginDate.ToString(),
-        //                 Lte = endDate.ToString(),
-        //             },
-        //         },
-        //     },
-        //     Aggregations = new Dictionary<string, Aggregation> { { "key", groupByKey } },
-        // };
-
-        // var response = await elasticsearchClient.SearchAsync<object>(searchRequest);
-
-        return await alternativeElasticsearchClient.GetStatisticsSummary(
-            dataType,
-            beginDate,
-            endDate,
-            dong,
-            gu,
-            si
+        CheckResponseFailed(
+            response?.ApiCall?.HttpStatusCode,
+            response?.ApiCall?.DebugInformation,
+            "GetStatisticsSummary Failed"
         );
+
+        if (response == null)
+            throw new InvalidOperationException("OpenSearch Response cannot be null.");
+
+        var totalStats = response.Aggregations.Stats("totalStats");
+        var contractDateGroup = response.Aggregations.Histogram("contractDateGroup");
+        return new StatisticalSummary(beginDate, endDate, totalStats, contractDateGroup);
     }
 }
