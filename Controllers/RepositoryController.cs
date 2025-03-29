@@ -28,11 +28,11 @@ public class RepositoryController : ControllerBase
         return Ok();
     }
 
-    [HttpPost("BulkInsert/{dataType}/{indexNameSuffix}")]
+    [HttpPost("BulkInsert/{dataType}/{yyyyMMdd}")]
     public async Task<IActionResult> PutBuySellData(
         IFormFile csvFile,
         VillanonoDataType dataType,
-        int indexNameSuffix
+        int yyyyMMdd
     )
     {
         if (csvFile == null || csvFile.Length == 0)
@@ -42,7 +42,7 @@ public class RepositoryController : ControllerBase
 
         var stream = csvFile.OpenReadStream();
         var totalRowAffected = 0;
-        var indexName = $"villanono-{indexNameSuffix}";
+        var indexName = $"villanono-{yyyyMMdd}";
 
         if (dataType == VillanonoDataType.BuySell)
             totalRowAffected = await repositoryService.BulkInsert<BuySellModel>(stream, indexName);
@@ -52,17 +52,17 @@ public class RepositoryController : ControllerBase
         return Ok($"{totalRowAffected} row affected");
     }
 
-    [HttpPost("{indexName}")]
-    public async Task<IActionResult> CreateIndex(string indexName)
+    [HttpPost("{indexFullName}")]
+    public async Task<IActionResult> CreateIndex(string indexFullName)
     {
-        await repositoryService.CreateIndex(indexName);
+        await repositoryService.CreateIndex(indexFullName);
         return Ok();
     }
 
-    [HttpDelete("{indexName}")]
-    public async Task<IActionResult> DeleteIndex(string indexName)
+    [HttpDelete("{indexFullName}")]
+    public async Task<IActionResult> DeleteIndex(string indexFullName)
     {
-        await repositoryService.DeleteIndex(indexName);
+        await repositoryService.DeleteIndex(indexFullName);
         return Ok();
     }
 }
