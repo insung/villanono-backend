@@ -1,6 +1,5 @@
-using Elastic.Clients.Elasticsearch;
-using Elastic.Transport;
 using Microsoft.Extensions.Options;
+using OpenSearch.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,18 +10,15 @@ builder.Services.Configure<ElasticSearchSettingsModel>(
 builder.Services.AddSingleton(sp =>
 {
     var settings = sp.GetRequiredService<IOptions<ElasticSearchSettingsModel>>().Value;
-    var clientSettings = new ElasticsearchClientSettings(new Uri(settings.URL))
-        .Authentication(new ApiKey(settings.ApiKey))
+
+    var clientSettings = new ConnectionSettings(new Uri(settings.URL))
+        .BasicAuthentication(settings.UserName, settings.Password)
         .ServerCertificateValidationCallback((sender, certificate, chain, sslPolicyErrors) => true)
+        .EnableDebugMode()
         .DefaultIndex(settings.DefaultIndex);
+    // .Authentication(new ApiKey(settings.ApiKey))
 
-    return new ElasticsearchClient(clientSettings);
-});
-
-builder.Services.AddSingleton(sp =>
-{
-    var settings = sp.GetRequiredService<IOptions<ElasticSearchSettingsModel>>().Value;
-    return new AlternativeElasticsearchClient(settings.URL, settings.ApiKey);
+    return new OpenSearchClient(clientSettings);
 });
 
 builder.Services.AddScoped<IVillanonoRepository, VillanonoElasticSearchRepository>();
