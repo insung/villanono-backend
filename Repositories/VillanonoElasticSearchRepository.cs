@@ -200,6 +200,13 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
                     }
                 },
                 { "totalStats", new StatsAggregation("totalStats", "transactionAmount") },
+                {
+                    "totalPercentiles",
+                    new PercentilesAggregation("totalPercentiles", "transactionAmount")
+                    {
+                        Percents = new[] { 25.0, 50.0, 75.0 },
+                    }
+                },
             },
             Size = 0,
         };
@@ -216,7 +223,14 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
             throw new InvalidOperationException("OpenSearch Response cannot be null.");
 
         var totalStats = response.Aggregations.Stats("totalStats");
+        var totalPercentiles = response.Aggregations.Percentiles("totalPercentiles");
         var contractDateGroup = response.Aggregations.Histogram("contractDateGroup");
-        return new StatisticalSummary(beginDate, endDate, totalStats, contractDateGroup);
+        return new StatisticalSummary(
+            beginDate,
+            endDate,
+            totalStats,
+            totalPercentiles,
+            contractDateGroup
+        );
     }
 }

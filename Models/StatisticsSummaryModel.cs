@@ -2,15 +2,14 @@ using OpenSearch.Client;
 
 public class StatisticalSummary
 {
-    public long TotalCount { get; set; }
-    public double? TotalAverage { get; set; }
-    public double StdDev { get; set; }
+    public StatisticsSummaryTotal Total { get; set; }
     public List<StatisticsSummaryItem> Items { get; set; }
 
     public StatisticalSummary(
         int beginDate,
         int endDate,
         StatsAggregate? totalStats,
+        PercentilesAggregate? totalPercentiles,
         MultiBucketAggregate<KeyedBucket<double>>? contractDateBuckets
     )
     {
@@ -19,13 +18,15 @@ public class StatisticalSummary
                 "Failed to create StatisticalSummary: totalStats cannot be null."
             );
 
+        if (totalPercentiles == null)
+            throw new ArgumentNullException(
+                "Failed to create StatisticalSummary: totalPercentiles cannot be null."
+            );
+
         if (contractDateBuckets == null)
             throw new ArgumentNullException(
                 "Failed to create StatisticalSummary: contractDateBuckets cannot be null."
             );
-
-        TotalCount = totalStats.Count;
-        TotalAverage = totalStats.Average;
 
         Items = new List<StatisticsSummaryItem>();
 
@@ -59,19 +60,22 @@ public class StatisticalSummary
             }
         }
 
-        double varianceSum = 0.0;
-        foreach (var average in Items.Select(x => x.Average))
-        {
-            varianceSum += Math.Pow(average ?? 0 - TotalAverage ?? 0, 2);
-        }
-        double variance = varianceSum / TotalCount;
-        StdDev = Math.Sqrt(variance);
+        Total = new StatisticsSummaryTotal(
+            count: totalStats.Count,
+            average: totalStats.Average,
+            min: totalStats.Min,
+            max: totalStats.Max,
+            sum: totalStats.Sum,
+            percentiles25: totalPercentiles.Items.First(p => p.Percentile == 25.0).Value,
+            percentiles50: totalPercentiles.Items.First(p => p.Percentile == 50.0).Value,
+            percentiles75: totalPercentiles.Items.First(p => p.Percentile == 75.0).Value,
+            itemsAverage: Items.Select(x => x.Average)
+        );
     }
 }
 
-public class StatisticsSummaryItem
+public class StatisticsSummaryBase
 {
-    public int ContractDate { get; set; }
     public long Count { get; set; }
     public double? Average { get; set; }
     public double? Min { get; set; }
@@ -80,4 +84,44 @@ public class StatisticsSummaryItem
     public double? Percentiles25 { get; set; }
     public double? Percentiles50 { get; set; }
     public double? Percentiles75 { get; set; }
+}
+
+public class StatisticsSummaryTotal : StatisticsSummaryBase
+{
+    public double StdDev { get; set; }
+
+    public StatisticsSummaryTotal(
+        long count,
+        double? average,
+        double? min,
+        double? max,
+        double sum,
+        double? percentiles25,
+        double? percentiles50,
+        double? percentiles75,
+        IEnumerable<double?> itemsAverage
+    )
+    {
+        Count = count;
+        Average = average;
+        Min = min;
+        Max = max;
+        Sum = sum;
+        Percentiles25 = percentiles25;
+        Percentiles50 = percentiles50;
+        Percentiles75 = percentiles75;
+
+        double varianceSum = 0.0;
+        foreach (var itemAverage in itemsAverage)
+        {
+            varianceSum += Math.Pow(itemAverage ?? 0 - Average ?? 0, 2);
+        }
+        double variance = varianceSum / Count;
+        StdDev = Math.Sqrt(variance);
+    }
+}
+
+public class StatisticsSummaryItem : StatisticsSummaryBase
+{
+    public int ContractDate { get; set; }
 }
