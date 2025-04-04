@@ -40,6 +40,11 @@ builder
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 100_000_000; // 100MB로 증가
+});
+
 var app = builder.Build();
 
 app.UseSwagger();
