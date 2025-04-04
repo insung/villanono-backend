@@ -30,9 +30,13 @@ public class StatisticalSummary
 
         Items = new List<StatisticsSummaryItem>();
 
-        for (int i = beginDate; i <= endDate; i++)
+        var begin = ConvertDateOnly(beginDate);
+        var end = ConvertDateOnly(endDate);
+
+        for (DateOnly date = begin; date <= end; date = date.AddDays(1))
         {
-            var whereCondition = contractDateBuckets.Buckets.Where(b => b.Key == i);
+            var intDate = ConvertInt32(date);
+            var whereCondition = contractDateBuckets.Buckets.Where(b => b.Key == intDate);
             if (whereCondition.Any())
             {
                 var groupBy = whereCondition.First();
@@ -56,7 +60,7 @@ public class StatisticalSummary
             }
             else
             {
-                Items.Add(new StatisticsSummaryItem { ContractDate = i });
+                Items.Add(new StatisticsSummaryItem { ContractDate = intDate });
             }
         }
 
@@ -71,6 +75,21 @@ public class StatisticalSummary
             percentiles75: totalPercentiles.Items.First(p => p.Percentile == 75.0).Value,
             itemsAverage: Items.Select(x => x.Average)
         );
+    }
+
+    private DateOnly ConvertDateOnly(int date)
+    {
+        var year = date / 10000;
+        var month = (date / 100) % 100;
+        var day = date % 100;
+
+        return new DateOnly(year, month, day);
+    }
+
+    private int ConvertInt32(DateOnly date)
+    {
+        var intDate = date.Year * 10000 + date.Month * 100 + date.Day;
+        return intDate;
     }
 }
 
