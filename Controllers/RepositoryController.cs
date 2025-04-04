@@ -28,28 +28,40 @@ public class RepositoryController : ControllerBase
         return Ok();
     }
 
-    [HttpPost("BulkInsert/{dataType}/{yyyyMMdd}")]
-    public async Task<IActionResult> PutBuySellData(
-        IFormFile csvFile,
-        VillanonoDataType dataType,
-        int yyyyMMdd
-    )
+    [HttpPost("BulkInsert")]
+    public async Task<IActionResult> PutBuySellData([FromForm] FileUploadModel fileUploadModels)
     {
-        if (csvFile == null || csvFile.Length == 0)
+        var resultMsg = new List<string>();
+        var dataType = fileUploadModels.DataType;
+
+        for (int index = 0; index < fileUploadModels.Files.Count; index++)
         {
-            return BadRequest("No file uploaded");
+            var csvFile = fileUploadModels.Files[index];
+            var yyyyMMdd = fileUploadModels.FileNames[index];
+
+            if (csvFile == null || csvFile.Length == 0)
+            {
+                return BadRequest("No file uploaded");
+            }
+
+            var stream = csvFile.OpenReadStream();
+            var totalRowAffected = 0;
+            var indexName = $"villanono-{dataType.ToString().ToLower()}-{yyyyMMdd}";
+
+            if (dataType == VillanonoDataType.BuySell)
+                totalRowAffected = await repositoryService.BulkInsert<BuySellModel>(
+                    stream,
+                    indexName
+                );
+            else
+                totalRowAffected = await repositoryService.BulkInsert<RentModel>(stream, indexName);
+
+            resultMsg.Add(
+                $"Successfully processed {totalRowAffected} records in the index '{indexName}'."
+            );
         }
 
-        var stream = csvFile.OpenReadStream();
-        var totalRowAffected = 0;
-        var indexName = $"villanono-{yyyyMMdd}";
-
-        if (dataType == VillanonoDataType.BuySell)
-            totalRowAffected = await repositoryService.BulkInsert<BuySellModel>(stream, indexName);
-        else
-            totalRowAffected = await repositoryService.BulkInsert<RentModel>(stream, indexName);
-
-        return Ok($"{totalRowAffected} row affected");
+        return Ok(resultMsg);
     }
 
     [HttpPost("{indexFullName}")]
