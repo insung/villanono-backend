@@ -4,26 +4,47 @@ public class BuySellModel : VillanonoBaseModel
 {
     public override VillanonoDataType DataType => VillanonoDataType.BuySell;
 
+    /// <summary>
+    /// 대지권면적
+    /// </summary>
     [Name("land_area")]
-    public double LandArea { get; set; } // "대지권면적"
+    public double LandArea { get; set; }
 
+    /// <summary>
+    /// 매수자
+    /// </summary>
     [Name("buyer")]
-    public string? Buyer { get; set; } // "매수자"
+    public string? Buyer { get; set; }
 
+    /// <summary>
+    /// 매도자
+    /// </summary>
     [Name("seller")]
-    public string? Seller { get; set; } // "매도자"
+    public string? Seller { get; set; }
 
+    /// <summary>
+    /// 해제사유발생일
+    /// </summary>
     [Name("release_reason_date")]
-    public int? ReleaseReasonDate { get; set; } // "해제사유발생일"
+    public int? ReleaseReasonDate { get; set; }
 
+    /// <summary>
+    /// 거래유형
+    /// </summary>
     [Name("transaction_type")]
-    public string? TransactionType { get; set; } // "거래유형"
+    public string? TransactionType { get; set; }
 
+    /// <summary>
+    /// 중개사소재지
+    /// </summary>
     [Name("broker_location")]
-    public string? BrokerLocation { get; set; } // "중개사소재지"
+    public string? BrokerLocation { get; set; }
 
+    /// <summary>
+    /// 등기일자
+    /// </summary>
     [Name("registration_date")]
-    public DateTime? RegistrationDate { get; set; } // "등기일자"
+    public DateTime? RegistrationDate { get; set; }
 }
 
 // public static class DataFrameHelper
