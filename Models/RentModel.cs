@@ -26,7 +26,7 @@ public class RentModel : VillanonoBaseModel
     /// 계약기간
     /// </summary>
     [Name("contract_period")]
-    public int ContractPeriod { get; set; }
+    public string? ContractPeriod { get; set; }
 
     /// <summary>
     /// 계약구분 (신규, 갱신, -)
@@ -45,4 +45,28 @@ public class RentModel : VillanonoBaseModel
     /// </summary>
     [Name("housing_type")]
     public string? HousingType { get; set; }
+
+    /// <summary>
+    /// 계약기간_시작
+    /// </summary>
+    [Name("contract_period_start")]
+    public int? ContractPeriodStart { get; set; }
+
+    /// <summary>
+    /// 계약기간_종료
+    /// </summary>
+    [Name("contract_period_end")]
+    public int? ContractPeriodEnd { get; set; }
+
+    /// <summary>
+    /// 종전계약 보증금(만원)
+    /// </summary>
+    [Name("previous_deposit_amount")]
+    public double? PreviousDepositAmount { get; set; }
+
+    /// <summary>
+    /// 종전계약 월세(만원)
+    /// </summary>
+    [Name("previous_monthly_rent")]
+    public double? PreviousMonthlyRent { get; set; }
 }
