@@ -24,7 +24,17 @@ builder.Services.AddSingleton(sp =>
 builder.Services.AddScoped<IVillanonoRepository, VillanonoElasticSearchRepository>();
 builder.Services.AddScoped<IDataService, DataService>();
 builder.Services.AddScoped<IRepositoryService, RepositoryService>();
-builder.Services.AddControllers();
+builder
+    .Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.NumberHandling = System
+            .Text
+            .Json
+            .Serialization
+            .JsonNumberHandling
+            .AllowNamedFloatingPointLiterals;
+    });
 
 // Swagger 서비스 추가
 builder.Services.AddEndpointsApiExplorer();
