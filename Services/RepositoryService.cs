@@ -54,7 +54,7 @@ public class RepositoryService : IRepositoryService
         // 마지막에 남은 데이터 전송
         if (records.Count > 0)
         {
-            await villanonoRepository.BulkInsert(records);
+            await villanonoRepository.BulkInsert(records, indexName);
             totalRowAffected += records.Count;
         }
 
