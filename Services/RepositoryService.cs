@@ -22,7 +22,8 @@ public class RepositoryService : IRepositoryService
         await villanonoRepository.Ping();
     }
 
-    public async ValueTask CreateIndex<T>(string indexName) where T : VillanonoBaseModel
+    public async ValueTask CreateIndex<T>(string indexName)
+        where T : VillanonoBaseModel
     {
         if (!await villanonoRepository.HasIndex(indexName))
             await villanonoRepository.CreateIndex<T>(indexName);
@@ -62,6 +63,7 @@ public class RepositoryService : IRepositoryService
     }
 
     private static async IAsyncEnumerable<T> ReadCsvFile<T>(StreamReader stream)
+        where T : VillanonoBaseModel
     {
         await Task.Yield(); // 비동기 I/O 지원
 
