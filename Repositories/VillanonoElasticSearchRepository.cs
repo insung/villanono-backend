@@ -26,9 +26,13 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
         );
     }
 
-    public async ValueTask CreateIndex(string indexName)
+    public async ValueTask CreateIndex<T>(string indexName)
+        where T : VillanonoBaseModel
     {
-        var response = await opensearchClient.Indices.CreateAsync(indexName);
+        var response = await opensearchClient.Indices.CreateAsync(
+            indexName,
+            c => c.Map<T>(m => m.Properties(p => p.Text(t => t.Name(n => n.AddressNumber))))
+        );
         CheckResponseFailed(
             response?.ApiCall?.HttpStatusCode,
             response?.ApiCall?.DebugInformation,
