@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Net;
 using Microsoft.Extensions.Options;
 using OpenSearch.Client;
@@ -6,6 +7,7 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
 {
     readonly OpenSearchClient opensearchClient;
     readonly string defaultIndex;
+    private const string locationsIndex = "villanono-locations";
 
     public VillanonoElasticSearchRepository(
         OpenSearchClient elasticsearchClient,
@@ -76,7 +78,7 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
         }
     }
 
-    public async Task BulkInsert<T>(List<T> records, string? indexName = null)
+    public async Task BulkInsertData<T>(List<T> records, string? indexName = null)
         where T : VillanonoBaseModel
     {
         if (string.IsNullOrWhiteSpace(indexName))
@@ -90,6 +92,25 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
             response?.ApiCall?.DebugInformation,
             "BulkInsert failed"
         );
+    }
+
+    public async Task BulkInsertWithLocations<T>(List<T> records)
+        where T : VillanonoBaseModel
+    {
+        var bulkOperations = new ConcurrentBag<IBulkOperation>();
+
+        Parallel.ForEach(
+            records,
+            record =>
+            {
+                var id = $"{record.Si}-{record.Gu}-{record.Dong}";
+                var bulkOperaion = new BulkCreateOperation<T>(record) { Id = id };
+                bulkOperations.Add(bulkOperaion);
+            }
+        );
+
+        var bulkRequest = new BulkRequest(locationsIndex) { Operations = bulkOperations.ToList() };
+        var response = await opensearchClient.BulkAsync(bulkRequest);
     }
 
     public async ValueTask<bool> HasIndex(string indexName)

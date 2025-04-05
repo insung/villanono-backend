@@ -46,7 +46,8 @@ public class RepositoryService : IRepositoryService
 
             if (records.Count >= batchSize)
             {
-                await villanonoRepository.BulkInsert(records, indexName);
+                await villanonoRepository.BulkInsertData(records, indexName);
+                await villanonoRepository.BulkInsertWithLocations(records);
                 records.Clear();
                 totalRowAffected += batchSize;
             }
@@ -55,7 +56,8 @@ public class RepositoryService : IRepositoryService
         // 마지막에 남은 데이터 전송
         if (records.Count > 0)
         {
-            await villanonoRepository.BulkInsert(records, indexName);
+            await villanonoRepository.BulkInsertData(records, indexName);
+            await villanonoRepository.BulkInsertWithLocations(records);
             totalRowAffected += records.Count;
         }
 
