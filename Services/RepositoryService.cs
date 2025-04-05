@@ -22,10 +22,10 @@ public class RepositoryService : IRepositoryService
         await villanonoRepository.Ping();
     }
 
-    public async ValueTask CreateIndex(string indexName)
+    public async ValueTask CreateIndex<T>(string indexName) where T : VillanonoBaseModel
     {
         if (!await villanonoRepository.HasIndex(indexName))
-            await villanonoRepository.CreateIndex(indexName);
+            await villanonoRepository.CreateIndex<T>(indexName);
     }
 
     public async Task<int> BulkInsert<T>(Stream stream, string indexName)
@@ -37,7 +37,7 @@ public class RepositoryService : IRepositoryService
         using var streamReader = new StreamReader(stream);
 
         if (!await villanonoRepository.HasIndex(indexName))
-            await villanonoRepository.CreateIndex(indexName);
+            await villanonoRepository.CreateIndex<T>(indexName);
 
         await foreach (var record in ReadCsvFile<T>(streamReader))
         {

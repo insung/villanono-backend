@@ -1,7 +1,8 @@
 public interface IVillanonoRepository
 {
     ValueTask Ping();
-    ValueTask CreateIndex(string indexName);
+    ValueTask CreateIndex<T>(string indexName)
+        where T : VillanonoBaseModel;
     Task BulkInsert<T>(List<T> records, string? indexName = null)
         where T : VillanonoBaseModel;
     ValueTask<bool> HasIndex(string indexName);
