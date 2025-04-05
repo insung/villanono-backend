@@ -26,10 +26,10 @@ public class RepositoryService : IRepositoryService
         where T : VillanonoBaseModel
     {
         if (!await villanonoRepository.HasIndex(indexName))
-            await villanonoRepository.CreateIndex<T>(indexName);
+            await villanonoRepository.CreateDataIndex<T>(indexName);
     }
 
-    public async Task<int> BulkInsert<T>(Stream stream, string indexName)
+    public async Task<int> BulkInsertData<T>(Stream stream, string indexName)
         where T : VillanonoBaseModel
     {
         var totalRowAffected = 0;
@@ -38,7 +38,7 @@ public class RepositoryService : IRepositoryService
         using var streamReader = new StreamReader(stream);
 
         if (!await villanonoRepository.HasIndex(indexName))
-            await villanonoRepository.CreateIndex<T>(indexName);
+            await villanonoRepository.CreateDataIndex<T>(indexName);
 
         await foreach (var record in ReadCsvFile<T>(streamReader))
         {
@@ -47,7 +47,7 @@ public class RepositoryService : IRepositoryService
             if (records.Count >= batchSize)
             {
                 await villanonoRepository.BulkInsertData(records, indexName);
-                await villanonoRepository.BulkInsertWithLocations(records);
+                await villanonoRepository.BulkInsertLocations(records);
                 records.Clear();
                 totalRowAffected += batchSize;
             }
@@ -57,11 +57,35 @@ public class RepositoryService : IRepositoryService
         if (records.Count > 0)
         {
             await villanonoRepository.BulkInsertData(records, indexName);
-            await villanonoRepository.BulkInsertWithLocations(records);
+            await villanonoRepository.BulkInsertLocations(records);
             totalRowAffected += records.Count;
         }
 
         return totalRowAffected;
+    }
+
+    public async Task BulkInsertLocations<T>(Stream stream)
+        where T : VillanonoBaseModel
+    {
+        var records = new List<T>();
+        using var streamReader = new StreamReader(stream);
+
+        await foreach (var record in ReadCsvFile<T>(streamReader))
+        {
+            records.Add(record);
+
+            if (records.Count >= batchSize)
+            {
+                await villanonoRepository.BulkInsertLocations(records);
+                records.Clear();
+            }
+        }
+
+        // 마지막에 남은 데이터 전송
+        if (records.Count > 0)
+        {
+            await villanonoRepository.BulkInsertLocations(records);
+        }
     }
 
     private static async IAsyncEnumerable<T> ReadCsvFile<T>(StreamReader stream)

@@ -28,13 +28,23 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
         );
     }
 
-    public async ValueTask CreateIndex<T>(string indexName)
+    public async ValueTask CreateDataIndex<T>(string indexName)
         where T : VillanonoBaseModel
     {
         var response = await opensearchClient.Indices.CreateAsync(
             indexName,
             c => c.Map<T>(m => m.Properties(p => p.Text(t => t.Name(n => n.AddressNumber))))
         );
+        CheckResponseFailed(
+            response?.ApiCall?.HttpStatusCode,
+            response?.ApiCall?.DebugInformation,
+            "Create Index failed"
+        );
+    }
+
+    public async ValueTask CreateLocationsIndex()
+    {
+        var response = await opensearchClient.Indices.CreateAsync(locationsIndex);
         CheckResponseFailed(
             response?.ApiCall?.HttpStatusCode,
             response?.ApiCall?.DebugInformation,
@@ -94,9 +104,12 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
         );
     }
 
-    public async Task BulkInsertWithLocations<T>(List<T> records)
+    public async Task BulkInsertLocations<T>(List<T> records)
         where T : VillanonoBaseModel
     {
+        if (!await HasIndex(locationsIndex))
+            await CreateLocationsIndex();
+
         var bulkOperations = new ConcurrentBag<IBulkOperation>();
 
         Parallel.ForEach(

@@ -27,8 +27,8 @@ public class RepositoryController : ControllerBase
         return Ok();
     }
 
-    [HttpPost("BulkInsert")]
-    public async Task<IActionResult> PutBuySellData([FromForm] FileUploadModel fileUploadModels)
+    [HttpPost("BulkInsertData")]
+    public async Task<IActionResult> BulkInsertData([FromForm] FileUploadModel fileUploadModels)
     {
         var resultMsg = new List<string>();
         var dataType = fileUploadModels.DataType;
@@ -48,12 +48,15 @@ public class RepositoryController : ControllerBase
             var indexName = $"villanono-{dataType.ToString().ToLower()}-{yyyyMMdd}";
 
             if (dataType == VillanonoDataType.BuySell)
-                totalRowAffected = await repositoryService.BulkInsert<BuySellModel>(
+                totalRowAffected = await repositoryService.BulkInsertData<BuySellModel>(
                     stream,
                     indexName
                 );
             else
-                totalRowAffected = await repositoryService.BulkInsert<RentModel>(stream, indexName);
+                totalRowAffected = await repositoryService.BulkInsertData<RentModel>(
+                    stream,
+                    indexName
+                );
 
             resultMsg.Add(
                 $"Successfully processed {totalRowAffected} records in the index '{indexName}'."
@@ -61,6 +64,30 @@ public class RepositoryController : ControllerBase
         }
 
         return Ok(resultMsg);
+    }
+
+    [HttpPost("BulkInsertLocations")]
+    public async Task<IActionResult> BulkInsertLocations(
+        List<IFormFile> files,
+        VillanonoDataType dataType
+    )
+    {
+        foreach (var csvFile in files)
+        {
+            if (csvFile == null || csvFile.Length == 0)
+            {
+                return BadRequest("No file uploaded");
+            }
+
+            var stream = csvFile.OpenReadStream();
+
+            if (dataType == VillanonoDataType.BuySell)
+                await repositoryService.BulkInsertLocations<BuySellModel>(stream);
+            else
+                await repositoryService.BulkInsertLocations<RentModel>(stream);
+        }
+
+        return Ok();
     }
 
     [HttpPost("{indexFullName}/{dataType}")]
