@@ -117,7 +117,13 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
             record =>
             {
                 var id = $"{record.Si}-{record.Gu}-{record.Dong}";
-                var bulkOperaion = new BulkCreateOperation<T>(record) { Id = id };
+                var locationRecord = new
+                {
+                    Si = record.Si,
+                    Gu = record.Gu,
+                    Dong = record.Dong,
+                };
+                var bulkOperaion = new BulkCreateOperation<object>(locationRecord) { Id = id };
                 bulkOperations.Add(bulkOperaion);
             }
         );
