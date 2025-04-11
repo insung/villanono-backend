@@ -1,3 +1,6 @@
+/// <summary>
+/// 빌라노노 데이터 서비스
+/// </summary>
 public class DataService : IDataService
 {
     readonly IVillanonoRepository villanonoRepository;
@@ -9,8 +12,8 @@ public class DataService : IDataService
 
     public async Task<IReadOnlyCollection<VillanonoBaseModel>> GetData(
         VillanonoDataType dataType,
-        int beginDate,
-        int endDate,
+        DateOnly beginDate,
+        DateOnly endDate,
         string dong,
         string gu,
         string si = "서울특별시"
@@ -46,8 +49,8 @@ public class DataService : IDataService
 
     public async Task<StatisticalSummary> GetStatisticsSummary(
         VillanonoDataType dataType,
-        int beginDate,
-        int endDate,
+        DateOnly beginDate,
+        DateOnly endDate,
         string dong,
         string gu,
         string si = "서울특별시"

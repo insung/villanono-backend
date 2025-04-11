@@ -28,6 +28,7 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
         );
     }
 
+    #region IndexManagement
     public async ValueTask CreateDataIndex<T>(string indexName)
         where T : VillanonoBaseModel
     {
@@ -52,6 +53,24 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
         );
     }
 
+    public async ValueTask<bool> HasIndex(string indexName)
+    {
+        var response = await opensearchClient.Indices.ExistsAsync(indexName);
+        return response.Exists;
+    }
+
+    public async ValueTask DeleteIndex(string indexName)
+    {
+        var response = await opensearchClient.Indices.DeleteAsync(indexName);
+        CheckResponseFailed(
+            response?.ApiCall?.HttpStatusCode,
+            response?.ApiCall?.DebugInformation,
+            "DeleteIndex failed"
+        );
+    }
+    #endregion
+
+    #region Private Methods
     private bool tryGetElasticSearchApiResponseCode(
         int? httpStatusCode,
         string? debugInformation,
@@ -87,7 +106,9 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
             throw new HttpRequestException(failedMessage, innerException, responseCode);
         }
     }
+    #endregion
 
+    #region Insert/BulkInsert
     public async Task BulkInsertData<T>(List<T> records, string? indexName = null)
         where T : VillanonoBaseModel
     {
@@ -131,27 +152,13 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
         var bulkRequest = new BulkRequest(locationsIndex) { Operations = bulkOperations.ToList() };
         var response = await opensearchClient.BulkAsync(bulkRequest);
     }
+    #endregion
 
-    public async ValueTask<bool> HasIndex(string indexName)
-    {
-        var response = await opensearchClient.Indices.ExistsAsync(indexName);
-        return response.Exists;
-    }
-
-    public async ValueTask DeleteIndex(string indexName)
-    {
-        var response = await opensearchClient.Indices.DeleteAsync(indexName);
-        CheckResponseFailed(
-            response?.ApiCall?.HttpStatusCode,
-            response?.ApiCall?.DebugInformation,
-            "DeleteIndex failed"
-        );
-    }
-
+    #region Read Operations
     public async Task<IReadOnlyCollection<T>> GetData<T>(
         VillanonoDataType dataType,
-        int beginDate,
-        int endDate,
+        DateOnly beginDate,
+        DateOnly endDate,
         string dong,
         string gu,
         string si = "서울특별시",
@@ -175,8 +182,8 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
                     new DateRangeQuery
                     {
                         Field = Infer.Field<T>(f => f.ContractDate),
-                        GreaterThanOrEqualTo = beginDate.ToString(),
-                        LessThanOrEqualTo = endDate.ToString(),
+                        GreaterThanOrEqualTo = beginDate.ToString("yyyyMMdd"),
+                        LessThanOrEqualTo = endDate.ToString("yyyyMMdd"),
                     },
                 },
             },
@@ -193,8 +200,8 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
 
     public async Task<StatisticalSummary> GetStatisticsSummary(
         VillanonoDataType dataType,
-        int beginDate,
-        int endDate,
+        DateOnly beginDate,
+        DateOnly endDate,
         string dong,
         string gu,
         string si = "서울특별시",
@@ -217,8 +224,8 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
                     new DateRangeQuery
                     {
                         Field = "contractDate",
-                        GreaterThanOrEqualTo = beginDate.ToString(),
-                        LessThanOrEqualTo = endDate.ToString(),
+                        GreaterThanOrEqualTo = beginDate.ToString("yyyyMMdd"),
+                        LessThanOrEqualTo = endDate.ToString("yyyyMMdd"),
                     },
                 },
             },
@@ -277,4 +284,5 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
             contractDateGroup
         );
     }
+    #endregion
 }

@@ -6,8 +6,8 @@ public class StatisticalSummary
     public List<StatisticsSummaryItem> Items { get; set; }
 
     public StatisticalSummary(
-        int beginDate,
-        int endDate,
+        DateOnly beginDate,
+        DateOnly endDate,
         StatsAggregate? totalStats,
         PercentilesAggregate? totalPercentiles,
         MultiBucketAggregate<KeyedBucket<double>>? contractDateBuckets
@@ -30,10 +30,7 @@ public class StatisticalSummary
 
         Items = new List<StatisticsSummaryItem>();
 
-        var begin = ConvertDateOnly(beginDate);
-        var end = ConvertDateOnly(endDate);
-
-        for (DateOnly date = begin; date <= end; date = date.AddDays(1))
+        for (DateOnly date = beginDate; date <= endDate; date = date.AddDays(1))
         {
             var intDate = ConvertInt32(date);
             var whereCondition = contractDateBuckets.Buckets.Where(b => b.Key == intDate);
