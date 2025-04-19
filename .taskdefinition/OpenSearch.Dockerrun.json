@@ -1,0 +1,48 @@
+{
+    "containerDefinitions": [
+        {
+            "name": "opensearch-node1",
+            "image": "public.ecr.aws/opensearchproject/opensearch:3",
+            "cpu": 1024,
+            "memoryReservation": 2048,
+            "portMappings": [
+                {
+                    "containerPort": 9200,
+                    "hostPort": 0
+                },
+                {
+                    "containerPort": 9600,
+                    "hostPort": 0
+                }
+            ],
+            "essential": true,
+            "environment": [
+                {
+                    "name": "OPENSEARCH_INITIAL_ADMIN_PASSWORD",
+                    "value": "ZhPRy1o3hjVkaDHwG60F"
+                },
+                {
+                    "name": "discovery.type",
+                    "value": "single-node"
+                }
+            ],
+            "environmentFiles": [],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "systemControls": [],
+            "links": []
+        }
+    ],
+    "family": "villanono-opensearch",
+    "executionRoleArn": "arn:aws:iam::468917192189:role/ecsServiceExecutionRole",
+    "volumes": [],
+    "placementConstraints": [],
+    "requiresCompatibilities": [
+        "EC2"
+    ],
+    "cpu": "1024",
+    "memory": "2048",
+    "runtimePlatform": {
+        "operatingSystemFamily": "LINUX"
+    }
+}
