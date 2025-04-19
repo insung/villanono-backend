@@ -138,7 +138,7 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
             record =>
             {
                 var id = $"{record.Si}-{record.Gu}-{record.Dong}";
-                var locationRecord = new Locations
+                var locationRecord = new Location
                 {
                     Si = record.Si,
                     Gu = record.Gu,

@@ -2,13 +2,13 @@ using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("api/[controller]")]
-public class StatisticController : ControllerBase
+public class ReportController : ControllerBase
 {
-    readonly IDataService villanonoDataService;
+    readonly IReportService reportService;
 
-    public StatisticController(IDataService villanonoDataService)
+    public ReportController(IReportService reportService)
     {
-        this.villanonoDataService = villanonoDataService;
+        this.reportService = reportService;
     }
 
     /// <summary>
@@ -31,7 +31,7 @@ public class StatisticController : ControllerBase
         [FromQuery] string si = "서울특별시"
     )
     {
-        var statisticsSummary = await villanonoDataService.GetStatisticsSummary(
+        var statisticsSummary = await reportService.GetStatisticsSummary(
             dataType,
             beginDate,
             endDate,

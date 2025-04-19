@@ -23,8 +23,12 @@ builder.Services.AddSingleton(sp =>
 });
 
 builder.Services.AddScoped<IVillanonoRepository, VillanonoElasticSearchRepository>();
-builder.Services.AddScoped<IDataService, DataService>();
-builder.Services.AddScoped<IRepositoryService, RepositoryService>();
+builder.Services.AddScoped<IIndexManagementService, IndexManagementService>();
+builder.Services.AddScoped<ICSVReader, CSVReader>();
+builder.Services.AddScoped<IRawDataService, RawDataService>();
+builder.Services.AddScoped<ILocationService, LocationService>();
+builder.Services.AddScoped<IReportService, ReportService>();
+
 builder
     .Services.AddControllers()
     .AddJsonOptions(options =>

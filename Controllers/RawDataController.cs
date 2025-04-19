@@ -4,15 +4,15 @@ using Microsoft.AspNetCore.Mvc;
 [Route("api/[controller]")]
 public class RawDataController : ControllerBase
 {
-    readonly IDataService villanonoDataService;
+    readonly IRawDataService rawDataService;
 
-    public RawDataController(IDataService villanonoDataService)
+    public RawDataController(IRawDataService rawDataService)
     {
-        this.villanonoDataService = villanonoDataService;
+        this.rawDataService = rawDataService;
     }
 
     /// <summary>
-    /// RawData 가져오기
+    /// 빌라노노 데이터 가져오기
     /// </summary>
     /// <param name="dataType">데이터타입</param>
     /// <param name="beginDate">시작일</param>
@@ -21,7 +21,7 @@ public class RawDataController : ControllerBase
     /// <param name="gu">구</param>
     /// <param name="si">시</param>
     /// <returns></returns>
-    [HttpGet("RawData/{dataType}")]
+    [HttpGet("{dataType}")]
     public async Task<IActionResult> GetData(
         VillanonoDataType dataType,
         [FromQuery] DateOnly beginDate,
@@ -31,7 +31,51 @@ public class RawDataController : ControllerBase
         [FromQuery] string si = "서울특별시"
     )
     {
-        var models = await villanonoDataService.GetData(dataType, beginDate, endDate, dong, gu, si);
+        var models = await rawDataService.GetData(dataType, beginDate, endDate, dong, gu, si);
         return Ok(models);
+    }
+
+    /// <summary>
+    /// 빌라노노 데이터 Bulk Insert (위치정보도 갱신됨)
+    /// </summary>
+    /// <param name="fileUploadModels"></param>
+    /// <returns></returns>
+    [HttpPost("BulkInsert")]
+    public async Task<IActionResult> BulkInsert([FromForm] FileUploadModel fileUploadModels)
+    {
+        var resultMsg = new List<string>();
+        var dataType = fileUploadModels.DataType;
+
+        for (int index = 0; index < fileUploadModels.Files.Count; index++)
+        {
+            var csvFile = fileUploadModels.Files[index];
+            var yyyyMMdd = fileUploadModels.FileNames[index];
+
+            if (csvFile == null || csvFile.Length == 0)
+            {
+                return BadRequest("No file uploaded");
+            }
+
+            var stream = csvFile.OpenReadStream();
+            var totalRowAffected = 0;
+            var indexName = $"villanono-{dataType.ToString().ToLower()}-{yyyyMMdd}";
+
+            if (dataType == VillanonoDataType.BuySell)
+                totalRowAffected = await rawDataService.BulkInsertData<BuySellModel>(
+                    stream,
+                    indexName
+                );
+            else
+                totalRowAffected = await rawDataService.BulkInsertData<RentModel>(
+                    stream,
+                    indexName
+                );
+
+            resultMsg.Add(
+                $"Successfully processed {totalRowAffected} records in the index '{indexName}'."
+            );
+        }
+
+        return Ok(resultMsg);
     }
 }

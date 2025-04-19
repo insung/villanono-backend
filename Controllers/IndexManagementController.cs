@@ -4,21 +4,21 @@ using Microsoft.AspNetCore.Mvc;
 [Route("api/[controller]")]
 public class IndexManagementController : ControllerBase
 {
-    readonly IRepositoryService repositoryService;
+    readonly IIndexManagementService indexManagementService;
 
-    public IndexManagementController(IRepositoryService repositoryService)
+    public IndexManagementController(IIndexManagementService indexManagementService)
     {
-        this.repositoryService = repositoryService;
+        this.indexManagementService = indexManagementService;
     }
 
     /// <summary>
-    /// Repository 살아있는지 확인
+    /// 살아있는지 확인
     /// </summary>
     /// <returns></returns>
-    [HttpGet("Ping")]
-    public async Task<IActionResult> Ping()
+    [HttpGet("HealthCheck")]
+    public async Task<IActionResult> HealthCheck()
     {
-        await repositoryService.HealthCheck();
+        await indexManagementService.HealthCheck();
         return Ok();
     }
 
@@ -41,9 +41,9 @@ public class IndexManagementController : ControllerBase
     public async Task<IActionResult> CreateIndex(string indexFullName, VillanonoDataType dataType)
     {
         if (dataType == VillanonoDataType.BuySell)
-            await repositoryService.CreateIndex<BuySellModel>(indexFullName);
+            await indexManagementService.CreateIndex<BuySellModel>(indexFullName);
         else if (dataType == VillanonoDataType.Rent)
-            await repositoryService.CreateIndex<RentModel>(indexFullName);
+            await indexManagementService.CreateIndex<RentModel>(indexFullName);
         return Ok();
     }
 
@@ -55,7 +55,7 @@ public class IndexManagementController : ControllerBase
     [HttpDelete("{indexFullName}")]
     public async Task<IActionResult> DeleteIndex(string indexFullName)
     {
-        await repositoryService.DeleteIndex(indexFullName);
+        await indexManagementService.DeleteIndex(indexFullName);
         return Ok();
     }
 }
