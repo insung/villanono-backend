@@ -12,7 +12,7 @@ public class DataInsertController : ControllerBase
     }
 
     /// <summary>
-    /// 빌라노노 데이터 Bulk Insert
+    /// 빌라노노 데이터 Bulk Insert (위치정보도 갱신됨)
     /// </summary>
     /// <param name="fileUploadModels"></param>
     /// <returns></returns>
