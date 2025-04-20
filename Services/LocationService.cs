@@ -17,6 +17,21 @@ public class LocationService : ILocationService
         batchSize = elasticSearchSettings.Value.BatchSize;
     }
 
+    public async Task<IList<string>> GetAllSi()
+    {
+        return await villanonoRepository.GetAllSi();
+    }
+
+    public async Task<IList<string>> GetAllGu(string Si)
+    {
+        return await villanonoRepository.GetAllGu(Si);
+    }
+
+    public async Task<IList<string>> GetAllDong(string Si, string Gu)
+    {
+        return await villanonoRepository.GetAllDong(Si, Gu);
+    }
+
     public async Task BulkInsertLocations<T>(Stream stream)
         where T : VillanonoBaseModel
     {

@@ -138,7 +138,7 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
             record =>
             {
                 var id = $"{record.Si}-{record.Gu}-{record.Dong}";
-                var locationRecord = new Location
+                var locationRecord = new LocationModel
                 {
                     Si = record.Si,
                     Gu = record.Gu,
@@ -283,6 +283,89 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
             totalPercentiles,
             contractDateGroup
         );
+    }
+
+    public async Task<IList<string>> GetAllSi()
+    {
+        var response = await opensearchClient.SearchAsync<LocationModel>(s =>
+            s.Index(locationsIndex)
+                .Size(0) // 결과 문서는 필요하지 않으므로 Size 0
+                .Aggregations(a =>
+                    a.Terms(
+                        "si",
+                        t =>
+                            t.Field(f => f.Si.Suffix("keyword")) // 분석되지 않은 필드 사용
+                                .Size(100) // 충분한 버킷 수
+                    )
+                )
+        );
+
+        CheckResponseFailed(
+            response?.ApiCall?.HttpStatusCode,
+            response?.ApiCall?.DebugInformation,
+            "GetAllSi Failed"
+        );
+
+        var result = response
+            .Aggregations.Terms("si")
+            .Buckets.Select(bucket => bucket.Key)
+            .ToList();
+        return result;
+    }
+
+    public async Task<IList<string>> GetAllGu(string Si)
+    {
+        var response = await opensearchClient.SearchAsync<LocationModel>(s =>
+            s.Index(locationsIndex)
+                .Size(0) // 결과 문서는 필요하지 않으므로 Size 0
+                .Query(q => q.Term(t => t.Field(f => f.Si.Suffix("keyword")).Value(Si)))
+                .Aggregations(a =>
+                    a.Terms("gu", t => t.Field(f => f.Gu.Suffix("keyword")).Size(100))
+                )
+        );
+
+        CheckResponseFailed(
+            response?.ApiCall?.HttpStatusCode,
+            response?.ApiCall?.DebugInformation,
+            "GetAllSi Failed"
+        );
+
+        var result = response
+            .Aggregations.Terms("gu")
+            .Buckets.Select(bucket => bucket.Key)
+            .ToList();
+        return result;
+    }
+
+    public async Task<IList<string>> GetAllDong(string Si, string Gu)
+    {
+        var response = await opensearchClient.SearchAsync<LocationModel>(s =>
+            s.Index(locationsIndex)
+                .Size(0) // 결과 문서는 필요하지 않으므로 Size 0
+                .Query(q =>
+                    q.Bool(b =>
+                        b.Must(
+                            mq => mq.Term(t => t.Field(f => f.Si.Suffix("keyword")).Value(Si)),
+                            mq => mq.Term(t => t.Field(f => f.Gu.Suffix("keyword")).Value(Gu))
+                        )
+                    )
+                )
+                .Aggregations(a =>
+                    a.Terms("dong", t => t.Field(f => f.Dong.Suffix("keyword")).Size(100))
+                )
+        );
+
+        CheckResponseFailed(
+            response?.ApiCall?.HttpStatusCode,
+            response?.ApiCall?.DebugInformation,
+            "GetAllSi Failed"
+        );
+
+        var result = response
+            .Aggregations.Terms("dong")
+            .Buckets.Select(bucket => bucket.Key)
+            .ToList();
+        return result;
     }
     #endregion
 }

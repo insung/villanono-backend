@@ -18,7 +18,8 @@ public class LocationController : ControllerBase
     [HttpGet("Si")]
     public async Task<IActionResult> GetAllSi()
     {
-        return Ok();
+        var result = await locationService.GetAllSi();
+        return Ok(result);
     }
 
     /// <summary>
@@ -29,7 +30,8 @@ public class LocationController : ControllerBase
     [HttpGet("Si/{Si}/Gu")]
     public async Task<IActionResult> GetAllGu([FromRoute] string Si)
     {
-        return Ok();
+        var result = await locationService.GetAllGu(Si);
+        return Ok(result);
     }
 
     /// <summary>
@@ -41,7 +43,8 @@ public class LocationController : ControllerBase
     [HttpGet("Si/{Si}/Gu/{Gu}/Dong")]
     public async Task<IActionResult> GetAllDong([FromRoute] string Si, [FromRoute] string Gu)
     {
-        return Ok();
+        var result = await locationService.GetAllDong(Si, Gu);
+        return Ok(result);
     }
 
     /// <summary>

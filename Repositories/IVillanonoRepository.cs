@@ -106,5 +106,11 @@ public interface IVillanonoRepository
         string si = "서울특별시",
         string indexName = "villanono-*"
     );
+
+    Task<IList<string>> GetAllSi();
+
+    Task<IList<string>> GetAllGu(string Si);
+
+    Task<IList<string>> GetAllDong(string Si, string Gu);
     #endregion
 }
