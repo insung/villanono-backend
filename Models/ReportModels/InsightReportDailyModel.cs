@@ -1,11 +1,8 @@
 using OpenSearch.Client;
 
-public class StatisticalSummary
+public class InsightReportDailyModel : InsightReportBaseModel
 {
-    public StatisticsSummaryTotal Total { get; set; }
-    public List<StatisticsSummaryItem> Items { get; set; }
-
-    public StatisticalSummary(
+    public InsightReportDailyModel(
         DateOnly beginDate,
         DateOnly endDate,
         StatsAggregate? totalStats,
@@ -28,7 +25,7 @@ public class StatisticalSummary
                 "Failed to create StatisticalSummary: contractDateBuckets cannot be null."
             );
 
-        Items = new List<StatisticsSummaryItem>();
+        Items = new List<InsightSummaryItem>();
 
         for (DateOnly date = beginDate; date <= endDate; date = date.AddDays(1))
         {
@@ -41,7 +38,7 @@ public class StatisticalSummary
                 var percentiles = groupBy.Percentiles("percentiles");
 
                 Items.Add(
-                    new StatisticsSummaryItem
+                    new InsightSummaryItem
                     {
                         ContractDate = (int)groupBy.Key,
                         Count = stats.Count,
@@ -57,11 +54,11 @@ public class StatisticalSummary
             }
             else
             {
-                Items.Add(new StatisticsSummaryItem { ContractDate = intDate });
+                Items.Add(new InsightSummaryItem { ContractDate = intDate });
             }
         }
 
-        Total = new StatisticsSummaryTotal(
+        Total = new InsightSummary(
             count: totalStats.Count,
             average: totalStats.Average,
             min: totalStats.Min,
@@ -73,71 +70,4 @@ public class StatisticalSummary
             itemsAverage: Items.Select(x => x.Average)
         );
     }
-
-    private DateOnly ConvertDateOnly(int date)
-    {
-        var year = date / 10000;
-        var month = (date / 100) % 100;
-        var day = date % 100;
-
-        return new DateOnly(year, month, day);
-    }
-
-    private int ConvertInt32(DateOnly date)
-    {
-        var intDate = date.Year * 10000 + date.Month * 100 + date.Day;
-        return intDate;
-    }
-}
-
-public class StatisticsSummaryBase
-{
-    public long Count { get; set; }
-    public double? Average { get; set; }
-    public double? Min { get; set; }
-    public double? Max { get; set; }
-    public double Sum { get; set; }
-    public double? Percentiles25 { get; set; }
-    public double? Percentiles50 { get; set; }
-    public double? Percentiles75 { get; set; }
-}
-
-public class StatisticsSummaryTotal : StatisticsSummaryBase
-{
-    public double StdDev { get; set; }
-
-    public StatisticsSummaryTotal(
-        long count,
-        double? average,
-        double? min,
-        double? max,
-        double sum,
-        double? percentiles25,
-        double? percentiles50,
-        double? percentiles75,
-        IEnumerable<double?> itemsAverage
-    )
-    {
-        Count = count;
-        Average = average;
-        Min = min;
-        Max = max;
-        Sum = sum;
-        Percentiles25 = percentiles25;
-        Percentiles50 = percentiles50;
-        Percentiles75 = percentiles75;
-
-        double varianceSum = 0.0;
-        foreach (var itemAverage in itemsAverage)
-        {
-            varianceSum += Math.Pow(itemAverage ?? 0 - Average ?? 0, 2);
-        }
-        double variance = varianceSum / Count;
-        StdDev = Math.Sqrt(variance);
-    }
-}
-
-public class StatisticsSummaryItem : StatisticsSummaryBase
-{
-    public int ContractDate { get; set; }
 }

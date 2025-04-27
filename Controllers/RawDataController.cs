@@ -15,8 +15,8 @@ public class RawDataController : ControllerBase
     /// 빌라노노 데이터 가져오기
     /// </summary>
     /// <param name="dataType">데이터타입</param>
-    /// <param name="beginDate">시작일</param>
-    /// <param name="endDate">종료일</param>
+    /// <param name="beginDate">시작일 (yyyy-MM-dd)</param>
+    /// <param name="endDate">종료일 (yyyy-MM-dd)</param>
     /// <param name="dong">동</param>
     /// <param name="gu">구</param>
     /// <param name="si">시</param>
@@ -49,7 +49,7 @@ public class RawDataController : ControllerBase
         for (int index = 0; index < fileUploadModels.Files.Count; index++)
         {
             var csvFile = fileUploadModels.Files[index];
-            var yyyyMMdd = fileUploadModels.FileNames[index];
+            var yyyyMMdd = fileUploadModels.IndexNames[index];
 
             if (csvFile == null || csvFile.Length == 0)
             {

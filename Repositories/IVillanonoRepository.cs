@@ -87,7 +87,7 @@ public interface IVillanonoRepository
         where T : VillanonoBaseModel;
 
     /// <summary>
-    /// 통계 데이터를 가져오는 메서드
+    /// Daily Insight 리포트 데이터를 가져오는 메서드
     /// </summary>
     /// <param name="dataType"></param>
     /// <param name="beginDate"></param>
@@ -97,10 +97,31 @@ public interface IVillanonoRepository
     /// <param name="si"></param>
     /// <param name="indexName"></param>
     /// <returns></returns>
-    Task<StatisticalSummary> GetStatisticsSummary(
+    Task<InsightReportDailyModel> GetReportInsightDaily(
         VillanonoDataType dataType,
         DateOnly beginDate,
         DateOnly endDate,
+        string dong,
+        string gu,
+        string si = "서울특별시",
+        string indexName = "villanono-*"
+    );
+
+    /// <summary>
+    /// Monthly Insight 리포트 데이터를 가져오는 메서드
+    /// </summary>
+    /// <param name="dataType"></param>
+    /// <param name="beginYearMonth"></param>
+    /// <param name="endYearMonth"></param>
+    /// <param name="dong"></param>
+    /// <param name="gu"></param>
+    /// <param name="si"></param>
+    /// <param name="indexName"></param>
+    /// <returns></returns>
+    Task<InsightReportMonthlyModel> GetReportInsightMonthly(
+        VillanonoDataType dataType,
+        int beginYearMonth,
+        int endYearMonth,
         string dong,
         string gu,
         string si = "서울특별시",

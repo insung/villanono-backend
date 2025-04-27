@@ -12,26 +12,26 @@ public class ReportController : ControllerBase
     }
 
     /// <summary>
-    /// 통계 데이터 가져오기
+    /// Daily Insight 통계 데이터 가져오기
     /// </summary>
     /// <param name="dataType">데이터타입</param>
-    /// <param name="beginDate">시작일</param>
-    /// <param name="endDate">종료일</param>
+    /// <param name="beginDate">시작일 (yyyy-MM-dd)</param>
+    /// <param name="endDate">종료일 (yyyy-MM-dd)</param>
     /// <param name="dong">동</param>
     /// <param name="gu">구</param>
     /// <param name="si">시</param>
     /// <returns>통계데이터</returns>
-    [HttpGet("StatisticalSummary/{dataType}")]
-    public async Task<IActionResult> GetVolumeAndAverage(
+    [HttpPost("Insight/Daily")]
+    public async Task<IActionResult> GetReportInsightDaily(
         VillanonoDataType dataType,
-        [FromQuery] DateOnly beginDate,
-        [FromQuery] DateOnly endDate,
-        [FromQuery] string dong,
-        [FromQuery] string gu,
-        [FromQuery] string si = "서울특별시"
+        DateOnly beginDate,
+        DateOnly endDate,
+        string dong,
+        string gu,
+        string si = "서울특별시"
     )
     {
-        var statisticsSummary = await reportService.GetStatisticsSummary(
+        var dailyInsightData = await reportService.GetInsightDaily(
             dataType,
             beginDate,
             endDate,
@@ -39,6 +39,37 @@ public class ReportController : ControllerBase
             gu,
             si
         );
-        return Ok(statisticsSummary);
+        return Ok(dailyInsightData);
+    }
+
+    /// <summary>
+    /// Monthly Insight 통계 데이터 가져오기
+    /// </summary>
+    /// <param name="dataType">데이터타입</param>
+    /// <param name="beginYearMonth">시작년월 (yyyyMM)</param>
+    /// <param name="endYearMonth">종료년월 (yyyyMM)</param>
+    /// <param name="dong">동</param>
+    /// <param name="gu">구</param>
+    /// <param name="si">시</param>
+    /// <returns>통계데이터</returns>
+    [HttpPost("Insight/Monthly")]
+    public async Task<IActionResult> GetReportInsightMonthly(
+        VillanonoDataType dataType,
+        int beginYearMonth,
+        int endYearMonth,
+        string dong,
+        string gu,
+        string si = "서울특별시"
+    )
+    {
+        var dailyInsightData = await reportService.GetInsightMonthly(
+            dataType,
+            beginYearMonth,
+            endYearMonth,
+            dong,
+            gu,
+            si
+        );
+        return Ok(dailyInsightData);
     }
 }

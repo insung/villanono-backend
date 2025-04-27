@@ -7,7 +7,7 @@ public class ReportService : IReportService
         this.villanonoRepository = villanonoRepository;
     }
 
-    public async Task<StatisticalSummary> GetStatisticsSummary(
+    public async Task<InsightReportDailyModel> GetInsightDaily(
         VillanonoDataType dataType,
         DateOnly beginDate,
         DateOnly endDate,
@@ -16,10 +16,29 @@ public class ReportService : IReportService
         string si = "서울특별시"
     )
     {
-        return await villanonoRepository.GetStatisticsSummary(
+        return await villanonoRepository.GetReportInsightDaily(
             dataType,
             beginDate,
             endDate,
+            dong,
+            gu,
+            si
+        );
+    }
+
+    public async Task<InsightReportMonthlyModel> GetInsightMonthly(
+        VillanonoDataType dataType,
+        int beginYearMonth,
+        int endYearMonth,
+        string dong,
+        string gu,
+        string si = "서울특별시"
+    )
+    {
+        return await villanonoRepository.GetReportInsightMonthly(
+            dataType,
+            beginYearMonth,
+            endYearMonth,
             dong,
             gu,
             si

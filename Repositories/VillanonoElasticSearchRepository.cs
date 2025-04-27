@@ -198,7 +198,7 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
         return response?.Documents ?? Array.Empty<T>();
     }
 
-    public async Task<StatisticalSummary> GetStatisticsSummary(
+    public async Task<InsightReportDailyModel> GetReportInsightDaily(
         VillanonoDataType dataType,
         DateOnly beginDate,
         DateOnly endDate,
@@ -276,9 +276,97 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
         var totalStats = response.Aggregations.Stats("totalStats");
         var totalPercentiles = response.Aggregations.Percentiles("totalPercentiles");
         var contractDateGroup = response.Aggregations.Histogram("contractDateGroup");
-        return new StatisticalSummary(
+        return new InsightReportDailyModel(
             beginDate,
             endDate,
+            totalStats,
+            totalPercentiles,
+            contractDateGroup
+        );
+    }
+
+    public async Task<InsightReportMonthlyModel> GetReportInsightMonthly(
+        VillanonoDataType dataType,
+        int beginYearMonth,
+        int endYearMonth,
+        string dong,
+        string gu,
+        string si = "서울특별시",
+        string indexName = "villanono-*"
+    )
+    {
+        var searchRequest = new SearchRequest(indexName)
+        {
+            Query = new BoolQuery
+            {
+                Must = new QueryContainer[]
+                {
+                    new TermQuery { Field = "dataType", Value = dataType },
+                    new MatchQuery { Field = "dong", Query = dong },
+                    new MatchQuery { Field = "gu", Query = gu },
+                    new MatchQuery { Field = "si", Query = si },
+                },
+                Filter = new QueryContainer[]
+                {
+                    new NumericRangeQuery
+                    {
+                        Field = "contractYearMonth",
+                        GreaterThanOrEqualTo = beginYearMonth,
+                        LessThanOrEqualTo = endYearMonth,
+                    },
+                },
+            },
+            Aggregations = new AggregationDictionary
+            {
+                {
+                    "contractDateGroup",
+                    new HistogramAggregation("contractDateGroup")
+                    {
+                        Field = "contractYearMonth",
+                        Interval = 1,
+                        Aggregations = new AggregationDictionary
+                        {
+                            { "stats", new StatsAggregation("stats", "transactionAmount") },
+                            {
+                                "percentiles",
+                                new PercentilesAggregation("percentiles", "transactionAmount")
+                                {
+                                    Percents = new[] { 25.0, 50.0, 75.0 },
+                                }
+                            },
+                        },
+                    }
+                },
+                { "totalStats", new StatsAggregation("totalStats", "transactionAmount") },
+                {
+                    "totalPercentiles",
+                    new PercentilesAggregation("totalPercentiles", "transactionAmount")
+                    {
+                        Percents = new[] { 25.0, 50.0, 75.0 },
+                    }
+                },
+            },
+            Size = 0,
+        };
+
+        var response = await opensearchClient.SearchAsync<object>(searchRequest);
+
+        CheckResponseFailed(
+            response?.ApiCall?.HttpStatusCode,
+            response?.ApiCall?.DebugInformation,
+            "GetStatisticsSummary Failed"
+        );
+
+        if (response == null)
+            throw new InvalidOperationException("OpenSearch Response cannot be null.");
+
+        var totalStats = response.Aggregations.Stats("totalStats");
+        var totalPercentiles = response.Aggregations.Percentiles("totalPercentiles");
+        var contractDateGroup = response.Aggregations.Histogram("contractDateGroup");
+
+        return new InsightReportMonthlyModel(
+            beginYearMonth,
+            endYearMonth,
             totalStats,
             totalPercentiles,
             contractDateGroup
