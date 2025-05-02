@@ -7,8 +7,8 @@ public class BuySellModel : VillanonoBaseModel
     /// <summary>
     /// 대지권면적
     /// </summary>
-    [Name("land_area")]
-    public double LandArea { get; set; }
+    [Name("land_share_area")]
+    public double LandShareArea { get; set; }
 
     /// <summary>
     /// 매수자
