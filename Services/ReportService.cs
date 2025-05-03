@@ -32,7 +32,10 @@ public class ReportService : IReportService
         int endYearMonth,
         string dong,
         string gu,
-        string si = "서울특별시"
+        string si = "서울특별시",
+        double? exclusiveAreaBegin = null,
+        double? exclusiveAreaEnd = null,
+        int? constructionYear = null
     )
     {
         return await villanonoRepository.GetReportInsightMonthly(
@@ -41,7 +44,10 @@ public class ReportService : IReportService
             endYearMonth,
             dong,
             gu,
-            si
+            si,
+            exclusiveAreaBegin,
+            exclusiveAreaEnd,
+            constructionYear
         );
     }
 }

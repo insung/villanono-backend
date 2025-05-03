@@ -28,6 +28,9 @@ public interface IReportService
     /// <param name="dong"></param>
     /// <param name="gu"></param>
     /// <param name="si"></param>
+    /// <param name="exclusiveAreaBegin"></param>
+    /// <param name="exclusiveAreaEnd"></param>
+    /// <param name="constructionYear"></param>
     /// <returns></returns>
     Task<InsightReportMonthlyModel> GetInsightMonthly(
         VillanonoDataType dataType,
@@ -35,6 +38,9 @@ public interface IReportService
         int endYearMonth,
         string dong,
         string gu,
-        string si = "서울특별시"
+        string si = "서울특별시",
+        double? exclusiveAreaBegin = null,
+        double? exclusiveAreaEnd = null,
+        int? constructionYear = null
     );
 }

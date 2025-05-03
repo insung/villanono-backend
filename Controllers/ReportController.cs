@@ -51,6 +51,9 @@ public class ReportController : ControllerBase
     /// <param name="dong">동</param>
     /// <param name="gu">구</param>
     /// <param name="si">시</param>
+    /// <param name="exclusiveAreaBegin">전용면적 시작</param>
+    /// <param name="exclusiveAreaEnd">전용면적 종료</param>
+    /// <param name="constructionYear">해당 건축년도 이상</param>
     /// <returns>통계데이터</returns>
     [HttpPost("Insight/Monthly")]
     public async Task<IActionResult> GetReportInsightMonthly(
@@ -59,7 +62,10 @@ public class ReportController : ControllerBase
         int endYearMonth,
         string dong,
         string gu,
-        string si = "서울특별시"
+        string si = "서울특별시",
+        double? exclusiveAreaBegin = null,
+        double? exclusiveAreaEnd = null,
+        int? constructionYear = null
     )
     {
         var dailyInsightData = await reportService.GetInsightMonthly(
@@ -68,7 +74,10 @@ public class ReportController : ControllerBase
             endYearMonth,
             dong,
             gu,
-            si
+            si,
+            exclusiveAreaBegin,
+            exclusiveAreaEnd,
+            constructionYear
         );
         return Ok(dailyInsightData);
     }

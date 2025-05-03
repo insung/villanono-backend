@@ -116,6 +116,9 @@ public interface IVillanonoRepository
     /// <param name="dong"></param>
     /// <param name="gu"></param>
     /// <param name="si"></param>
+    /// <param name="exclusiveAreaBegin"></param>
+    /// <param name="exclusiveAreaEnd"></param>
+    /// <param name="constructionYear"></param>
     /// <param name="indexName"></param>
     /// <returns></returns>
     Task<InsightReportMonthlyModel> GetReportInsightMonthly(
@@ -125,6 +128,9 @@ public interface IVillanonoRepository
         string dong,
         string gu,
         string si = "서울특별시",
+        double? exclusiveAreaBegin = null,
+        double? exclusiveAreaEnd = null,
+        int? constructionYear = null,
         string indexName = "villanono-*"
     );
 

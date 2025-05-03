@@ -292,9 +292,45 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
         string dong,
         string gu,
         string si = "서울특별시",
+        double? exclusiveAreaBegin = null,
+        double? exclusiveAreaEnd = null,
+        int? constructionYear = null,
         string indexName = "villanono-*"
     )
     {
+        var filters = new List<QueryContainer>
+        {
+            new NumericRangeQuery
+            {
+                Field = "contractYearMonth",
+                GreaterThanOrEqualTo = beginYearMonth,
+                LessThanOrEqualTo = endYearMonth,
+            },
+        };
+
+        if (exclusiveAreaBegin != null && exclusiveAreaEnd != null)
+        {
+            filters.Add(
+                new NumericRangeQuery
+                {
+                    Field = "exclusiveArea",
+                    GreaterThanOrEqualTo = exclusiveAreaBegin,
+                    LessThanOrEqualTo = exclusiveAreaEnd,
+                }
+            );
+        }
+
+        if (constructionYear != null)
+        {
+            filters.Add(
+                new NumericRangeQuery
+                {
+                    Field = "constructionYear",
+                    GreaterThanOrEqualTo = constructionYear,
+                }
+            );
+        }
+
         var searchRequest = new SearchRequest(indexName)
         {
             Query = new BoolQuery
@@ -306,15 +342,7 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
                     new MatchQuery { Field = "gu", Query = gu },
                     new MatchQuery { Field = "si", Query = si },
                 },
-                Filter = new QueryContainer[]
-                {
-                    new NumericRangeQuery
-                    {
-                        Field = "contractYearMonth",
-                        GreaterThanOrEqualTo = beginYearMonth,
-                        LessThanOrEqualTo = endYearMonth,
-                    },
-                },
+                Filter = filters,
             },
             Aggregations = new AggregationDictionary
             {
