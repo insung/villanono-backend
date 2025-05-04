@@ -61,7 +61,7 @@
         {
             "name": "opensearch-dashboards",
             "image": "opensearchproject/opensearch-dashboards:latest",
-            "cpu": 1024,
+            "cpu": 512,
             "memoryReservation": 1024,
             "portMappings": [
                 {
@@ -92,7 +92,7 @@
     "requiresCompatibilities": [
         "EC2"
     ],
-    "cpu": "2304",
+    "cpu": "1792",
     "memory": "2560",
     "runtimePlatform": {
         "operatingSystemFamily": "LINUX"
