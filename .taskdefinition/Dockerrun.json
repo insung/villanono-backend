@@ -22,7 +22,9 @@
             "mountPoints": [],
             "volumesFrom": [],
             "systemControls": [],
-            "links": []
+            "links": [
+                "opensearch-node1"
+            ]
         },
         {
             "name": "opensearch-node1",
