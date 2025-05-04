@@ -1,3 +1,4 @@
+using System.Globalization;
 using CsvHelper;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
@@ -16,9 +17,20 @@ public class VillanonoDateTimeConverter : DefaultTypeConverter
         {
             return date;
         }
+        else if (DateTime.TryParseExact(text, "yy.MM.dd", null, DateTimeStyles.None, out date))
+        {
+            // 1900년대를 2000년대로 강제로 변경
+            int fullYear = date.Year + (date.Year < 2000 ? 100 : 0);
+            date = new DateTime(fullYear, date.Month, date.Day);
+            return date;
+        }
 
-        Console.WriteLine($"Error: {text}");
-        throw new TypeConverterException(this, memberMapData, text, row.Context);
+        throw new TypeConverterException(
+            this,
+            memberMapData,
+            $"Invalid date format: {text}",
+            row.Context
+        );
     }
 }
 
