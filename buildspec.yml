@@ -13,7 +13,7 @@ phases:
   post_build:
     commands:
       - docker push 468917192189.dkr.ecr.ap-northeast-2.amazonaws.com/villanono-backend:${IMAGE_TAG}
-      - sed 's/%IMAGE_TAG%/${IMAGE_TAG}/g' imagedefinitions.json`
+      - sed 's/%IMAGE_TAG%/${IMAGE_TAG}/g' imagedefinitions.json
 
 artifacts:
   files:
