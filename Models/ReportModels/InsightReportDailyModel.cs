@@ -5,7 +5,7 @@ public class InsightReportDailyModel : InsightReportBaseModel
     public InsightReportDailyModel(
         DateOnly beginDate,
         DateOnly endDate,
-        StatsAggregate? totalStats,
+        ExtendedStatsAggregate? totalStats,
         PercentilesAggregate? totalPercentiles,
         MultiBucketAggregate<KeyedBucket<double>>? contractDateBuckets
     )
@@ -34,7 +34,7 @@ public class InsightReportDailyModel : InsightReportBaseModel
             if (whereCondition.Any())
             {
                 var groupBy = whereCondition.First();
-                var stats = groupBy.Stats("stats");
+                var stats = groupBy.ExtendedStats("extendedStats");
                 var percentiles = groupBy.Percentiles("percentiles");
 
                 Items.Add(
@@ -49,6 +49,7 @@ public class InsightReportDailyModel : InsightReportBaseModel
                         Percentiles25 = percentiles.Items.First(p => p.Percentile == 25.0).Value,
                         Percentiles50 = percentiles.Items.First(p => p.Percentile == 50.0).Value,
                         Percentiles75 = percentiles.Items.First(p => p.Percentile == 75.0).Value,
+                        StdDev = stats.StdDeviation,
                     }
                 );
             }
@@ -58,16 +59,17 @@ public class InsightReportDailyModel : InsightReportBaseModel
             }
         }
 
-        Total = new InsightSummary(
-            count: totalStats.Count,
-            average: totalStats.Average,
-            min: totalStats.Min,
-            max: totalStats.Max,
-            sum: totalStats.Sum,
-            percentiles25: totalPercentiles.Items.First(p => p.Percentile == 25.0).Value,
-            percentiles50: totalPercentiles.Items.First(p => p.Percentile == 50.0).Value,
-            percentiles75: totalPercentiles.Items.First(p => p.Percentile == 75.0).Value,
-            itemsAverage: Items.Select(x => x.Average)
-        );
+        Total = new InsightSummary
+        {
+            Count = totalStats.Count,
+            Average = totalStats.Average,
+            Min = totalStats.Min,
+            Max = totalStats.Max,
+            Sum = totalStats.Sum,
+            Percentiles25 = totalPercentiles.Items.First(p => p.Percentile == 25.0).Value,
+            Percentiles50 = totalPercentiles.Items.First(p => p.Percentile == 50.0).Value,
+            Percentiles75 = totalPercentiles.Items.First(p => p.Percentile == 75.0).Value,
+            StdDev = totalStats.StdDeviation,
+        };
     }
 }

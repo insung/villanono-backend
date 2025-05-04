@@ -33,7 +33,7 @@ public class InsightReportBaseModel
     }
 }
 
-public class InsightSummaryBase
+public class InsightSummary
 {
     public long Count { get; set; }
     public double? Average { get; set; }
@@ -43,44 +43,10 @@ public class InsightSummaryBase
     public double? Percentiles25 { get; set; }
     public double? Percentiles50 { get; set; }
     public double? Percentiles75 { get; set; }
+    public double? StdDev { get; set; } // Standard Deviation
 }
 
-public class InsightSummary : InsightSummaryBase
-{
-    public double StdDev { get; set; }
-
-    public InsightSummary(
-        long count,
-        double? average,
-        double? min,
-        double? max,
-        double sum,
-        double? percentiles25,
-        double? percentiles50,
-        double? percentiles75,
-        IEnumerable<double?> itemsAverage
-    )
-    {
-        Count = count;
-        Average = average;
-        Min = min;
-        Max = max;
-        Sum = sum;
-        Percentiles25 = percentiles25;
-        Percentiles50 = percentiles50;
-        Percentiles75 = percentiles75;
-
-        double varianceSum = 0.0;
-        foreach (var itemAverage in itemsAverage)
-        {
-            varianceSum += Math.Pow(itemAverage ?? 0 - Average ?? 0, 2);
-        }
-        double variance = varianceSum / Count;
-        StdDev = Math.Sqrt(variance);
-    }
-}
-
-public class InsightSummaryItem : InsightSummaryBase
+public class InsightSummaryItem : InsightSummary
 {
     public int ContractDate { get; set; }
 }

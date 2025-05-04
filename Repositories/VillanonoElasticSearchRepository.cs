@@ -273,7 +273,7 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
         if (response == null)
             throw new InvalidOperationException("OpenSearch Response cannot be null.");
 
-        var totalStats = response.Aggregations.Stats("totalStats");
+        var totalStats = response.Aggregations.ExtendedStats("totalStats");
         var totalPercentiles = response.Aggregations.Percentiles("totalPercentiles");
         var contractDateGroup = response.Aggregations.Histogram("contractDateGroup");
         return new InsightReportDailyModel(
@@ -354,7 +354,10 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
                         Interval = 1,
                         Aggregations = new AggregationDictionary
                         {
-                            { "stats", new StatsAggregation("stats", "transactionAmount") },
+                            {
+                                "extendedStats",
+                                new ExtendedStatsAggregation("extendedStats", "transactionAmount")
+                            },
                             {
                                 "percentiles",
                                 new PercentilesAggregation("percentiles", "transactionAmount")
@@ -365,7 +368,7 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
                         },
                     }
                 },
-                { "totalStats", new StatsAggregation("totalStats", "transactionAmount") },
+                { "totalStats", new ExtendedStatsAggregation("totalStats", "transactionAmount") },
                 {
                     "totalPercentiles",
                     new PercentilesAggregation("totalPercentiles", "transactionAmount")
@@ -388,7 +391,7 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
         if (response == null)
             throw new InvalidOperationException("OpenSearch Response cannot be null.");
 
-        var totalStats = response.Aggregations.Stats("totalStats");
+        var totalStats = response.Aggregations.ExtendedStats("totalStats");
         var totalPercentiles = response.Aggregations.Percentiles("totalPercentiles");
         var contractDateGroup = response.Aggregations.Histogram("contractDateGroup");
 
