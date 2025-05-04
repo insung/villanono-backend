@@ -8,11 +8,14 @@ builder.Services.Configure<ElasticSearchSettingsModel>(
     builder.Configuration.GetSection("ElasticSearch")
 );
 
+var elasticSearchURL =
+    Environment.GetEnvironmentVariable("ElasticSearch.URL") ?? "https://localhost:9200";
+
 builder.Services.AddSingleton(sp =>
 {
     var settings = sp.GetRequiredService<IOptions<ElasticSearchSettingsModel>>().Value;
 
-    var clientSettings = new ConnectionSettings(new Uri(settings.URL))
+    var clientSettings = new ConnectionSettings(new Uri(elasticSearchURL))
         .BasicAuthentication(settings.UserName, settings.Password)
         .ServerCertificateValidationCallback((sender, certificate, chain, sslPolicyErrors) => true)
         .EnableDebugMode()
