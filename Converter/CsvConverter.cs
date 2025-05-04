@@ -17,6 +17,7 @@ public class VillanonoDateTimeConverter : DefaultTypeConverter
             return date;
         }
 
+        Console.WriteLine($"Error: {text}");
         throw new TypeConverterException(this, memberMapData, text, row.Context);
     }
 }
