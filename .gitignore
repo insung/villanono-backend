@@ -56,3 +56,4 @@ nunit-*.xml
 .taskdefinition/*
 !.taskdefinition/docker-compose.yml
 !.taskdefinition/OpenSearch.Dockerrun.json
+!.taskdefinition/Dockerrun.json

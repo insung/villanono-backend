@@ -1,0 +1,6 @@
+[
+    {
+        "name": "villanono-backend",
+        "imageUri": "468917192189.dkr.ecr.ap-northeast-2.amazonaws.com/villanono-backend:%IMAGE_TAG%"
+    }
+]

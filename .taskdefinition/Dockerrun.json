@@ -1,0 +1,93 @@
+{
+    "containerDefinitions": [
+        {
+            "name": "villanono-backend",
+            "image": "468917192189.dkr.ecr.ap-northeast-2.amazonaws.com/villanono-backend:9fd7215",
+            "cpu": 256,
+            "memoryReservation": 512,
+            "portMappings": [
+                {
+                    "containerPort": 5000,
+                    "hostPort": 0
+                }
+            ],
+            "essential": true,
+            "environment": [],
+            "environmentFiles": [],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "systemControls": [],
+            "links": []
+        },
+        {
+            "name": "opensearch-node1",
+            "image": "opensearchproject/opensearch:latest",
+            "cpu": 1024,
+            "memoryReservation": 1024,
+            "portMappings": [
+                {
+                    "containerPort": 9200,
+                    "hostPort": 9200
+                },
+                {
+                    "containerPort": 9600,
+                    "hostPort": 9600
+                }
+            ],
+            "essential": true,
+            "environment": [
+                {
+                    "name": "discovery.type",
+                    "value": "single-node"
+                },
+                {
+                    "name": "OPENSEARCH_INITIAL_ADMIN_PASSWORD",
+                    "value": "ZhPRy1o3hjVkaDHwG60F"
+                }
+            ],
+            "environmentFiles": [],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "systemControls": [],
+            "links": []
+        },
+        {
+            "name": "opensearch-dashboards",
+            "image": "opensearchproject/opensearch-dashboards:latest",
+            "cpu": 1024,
+            "memoryReservation": 1024,
+            "portMappings": [
+                {
+                    "containerPort": 5601,
+                    "hostPort": 5601
+                }
+            ],
+            "essential": true,
+            "environment": [
+                {
+                    "name": "OPENSEARCH_HOSTS",
+                    "value": "https://opensearch-node1:9200"
+                }
+            ],
+            "environmentFiles": [],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "systemControls": [],
+            "links": [
+                "opensearch-node1"
+            ]
+        }
+    ],
+    "family": "villanono-backend",
+    "executionRoleArn": "arn:aws:iam::468917192189:role/ecsServiceExecutionRole",
+    "volumes": [],
+    "placementConstraints": [],
+    "requiresCompatibilities": [
+        "EC2"
+    ],
+    "cpu": "2304",
+    "memory": "2560",
+    "runtimePlatform": {
+        "operatingSystemFamily": "LINUX"
+    }
+}
