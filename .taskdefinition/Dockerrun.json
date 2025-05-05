@@ -24,7 +24,15 @@
             "systemControls": [],
             "links": [
                 "opensearch-node1"
-            ]
+            ],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/villanono-backend",
+                    "awslogs-region": "ap-northeast-2",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            }
         },
         {
             "name": "opensearch-node1",
@@ -50,13 +58,31 @@
                 {
                     "name": "OPENSEARCH_INITIAL_ADMIN_PASSWORD",
                     "value": "ZhPRy1o3hjVkaDHwG60F"
+                },
+                {
+                    "name": "OPENSEARCH_PATH_DATA",
+                    "value": "/mnt/efs"
                 }
             ],
             "environmentFiles": [],
-            "mountPoints": [],
+            "mountPoints": [
+                {
+                    "sourceVolume": "villanono-openseach-data",
+                    "containerPath": "/mnt/efs",
+                    "readOnly": false
+                }
+            ],
             "volumesFrom": [],
             "systemControls": [],
-            "links": []
+            "links": [],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/villanono-opensearch",
+                    "awslogs-region": "ap-northeast-2",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            }
         },
         {
             "name": "opensearch-dashboards",
@@ -82,12 +108,29 @@
             "systemControls": [],
             "links": [
                 "opensearch-node1"
-            ]
+            ],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/villanono-opensearch-dashboards",
+                    "awslogs-region": "ap-northeast-2",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            }
         }
     ],
     "family": "villanono-backend",
     "executionRoleArn": "arn:aws:iam::468917192189:role/ecsServiceExecutionRole",
-    "volumes": [],
+    "volumes": [
+        {
+            "name": "villanono-openseach-data",
+            "efsVolumeConfiguration": {
+                "fileSystemId": "fs-0ede590d1f8d07d48",
+                "rootDirectory": "/mnt/efs",
+                "transitEncryption": "ENABLED"
+            }
+        }
+    ],
     "placementConstraints": [],
     "requiresCompatibilities": [
         "EC2"
