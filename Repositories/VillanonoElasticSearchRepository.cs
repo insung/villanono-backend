@@ -7,7 +7,7 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
 {
     readonly OpenSearchClient opensearchClient;
     readonly string defaultIndex;
-    private const string locationsIndex = "villanono-locations";
+    private const string locationsIndex = "si-gu-dong";
 
     public VillanonoElasticSearchRepository(
         OpenSearchClient elasticsearchClient,
