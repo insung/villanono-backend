@@ -154,5 +154,7 @@ public interface IVillanonoRepository
     Task<IList<string>> GetAllGu(string Si);
 
     Task<IList<string>> GetAllDong(string Si, string Gu);
+
+    Task<IList<AddressModel>> GetAllAddress(string Si, string indexName = "villanono-*");
     #endregion
 }

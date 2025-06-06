@@ -513,5 +513,72 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
             .ToList();
         return result;
     }
+
+    public async Task<IList<AddressModel>> GetAllAddress(
+        string Si,
+        string indexName = "villanono-*"
+    )
+    {
+        var allAddresses = new List<AddressModel>();
+        CompositeKey? afterKey = null;
+
+        do
+        {
+            var response = await opensearchClient.SearchAsync<AddressModel>(s =>
+                s // 문서를 가져오지 않으므로 object 타입으로도 충분
+                .Index(indexName)
+                    .Size(0) // 실제 문서는 필요 없음
+                    .Query(q => q.Term(t => t.Field("si.keyword").Value(Si)))
+                    .Aggregations(aggs =>
+                        aggs.Composite(
+                            "full_address_composite",
+                            c =>
+                                c.Size(1000) // 한 번에 1000개의 고유 주소 조합을 가져옴
+                                    .After(afterKey)
+                                    // =====> 이 부분이 수정되었습니다 <=====
+                                    .Sources(sources =>
+                                        sources
+                                            .Terms("si_source", t => t.Field("si.keyword"))
+                                            .Terms("gu_source", t => t.Field("gu.keyword"))
+                                            .Terms("dong_source", t => t.Field("dong.keyword"))
+                                            .Terms(
+                                                "road_name_source",
+                                                t => t.Field("roadName.keyword")
+                                            )
+                                    )
+                        )
+                    )
+            );
+
+            if (response.IsValid && response.Aggregations.ContainsKey("full_address_composite"))
+            {
+                var compositeAgg = response.Aggregations.Composite("full_address_composite");
+
+                if (compositeAgg.Buckets.Count == 0)
+                    break; // 더 이상 가져올 버킷이 없으면 종료
+
+                var currentAddresses = compositeAgg.Buckets.Select(b => new AddressModel
+                {
+                    Si = b.Key["si_source"]?.ToString() ?? "",
+                    Gu = b.Key["gu_source"]?.ToString() ?? "",
+                    Dong = b.Key["dong_source"]?.ToString() ?? "",
+                    RoadName = b.Key["road_name_source"]?.ToString() ?? "",
+                });
+
+                allAddresses.AddRange(currentAddresses);
+
+                afterKey = compositeAgg.AfterKey;
+            }
+            else
+            {
+                if (!response.IsValid)
+                { /* 오류 로깅 */
+                }
+                break;
+            }
+        } while (afterKey != null && afterKey.Count > 0);
+
+        return allAddresses;
+    }
     #endregion
 }

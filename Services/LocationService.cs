@@ -32,6 +32,11 @@ public class LocationService : ILocationService
         return await villanonoRepository.GetAllDong(Si, Gu);
     }
 
+    public async Task<IList<AddressModel>> GetAllAddress(string Si)
+    {
+        return await villanonoRepository.GetAllAddress(Si);
+    }
+
     public async Task BulkInsertLocations<T>(Stream stream)
         where T : VillanonoBaseModel
     {
