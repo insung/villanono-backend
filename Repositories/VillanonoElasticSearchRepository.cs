@@ -29,6 +29,17 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
     }
 
     #region IndexManagement
+    public async ValueTask<string> CreateIndex(string indexName)
+    {
+        var response = await opensearchClient.Indices.CreateAsync(indexName);
+        CheckResponseFailed(
+            response?.ApiCall?.HttpStatusCode,
+            response?.ApiCall?.DebugInformation,
+            "Create Index failed"
+        );
+        return indexName;
+    }
+
     public async ValueTask CreateDataIndex<T>(string indexName)
         where T : VillanonoBaseModel
     {
@@ -39,7 +50,7 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
         CheckResponseFailed(
             response?.ApiCall?.HttpStatusCode,
             response?.ApiCall?.DebugInformation,
-            "Create Index failed"
+            "Create DataIndex failed"
         );
     }
 
@@ -66,6 +77,22 @@ public sealed class VillanonoElasticSearchRepository : IVillanonoRepository
             response?.ApiCall?.HttpStatusCode,
             response?.ApiCall?.DebugInformation,
             "DeleteIndex failed"
+        );
+    }
+
+    public async ValueTask ReIndex(string sourceIndexName, string targetIndexName)
+    {
+        var response = await opensearchClient.ReindexOnServerAsync(
+            new ReindexOnServerRequest
+            {
+                Source = new ReindexSource { Index = sourceIndexName },
+                Destination = new ReindexDestination { Index = targetIndexName },
+            }
+        );
+        CheckResponseFailed(
+            response?.ApiCall?.HttpStatusCode,
+            response?.ApiCall?.DebugInformation,
+            "ReIndex failed"
         );
     }
     #endregion
