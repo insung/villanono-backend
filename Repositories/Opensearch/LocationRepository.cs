@@ -97,11 +97,11 @@ public class LocationRepository : ILocationRepository
                     )
             );
 
-            if (!response.IsValid)
-            {
-                // 오류 처리
-                return allAddresses;
-            }
+            OpensearchResponseHandler.CheckResponseFailed(
+                response?.ApiCall?.HttpStatusCode,
+                response?.ApiCall?.DebugInformation,
+                "GetAllAddress failed"
+            );
 
             var compositeAgg = response.Aggregations.Composite("distinct_addresses");
 

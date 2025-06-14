@@ -74,4 +74,11 @@ public class IndexManagementController : ControllerBase
         await indexManagementRepository.ReIndex(sourceIndexName, targetIndexName);
         return Ok();
     }
+
+    [HttpPost("Template")]
+    public async Task<IActionResult> CreateTemplate()
+    {
+        await indexManagementRepository.CreateDefaultIndexTemplate();
+        return Ok("Default index template created successfully.");
+    }
 }

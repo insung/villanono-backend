@@ -43,4 +43,10 @@ public interface IIndexManagementRepository
     /// <param name="targetIndexName"></param>
     /// <returns></returns>
     ValueTask ReIndex(string sourceIndexName, string targetIndexName);
+
+    /// <summary>
+    /// 기본 인덱스 템플릿을 생성하는 메서드
+    /// </summary>
+    /// <returns></returns>
+    ValueTask CreateDefaultIndexTemplate(CancellationToken cancellationToken = default);
 }

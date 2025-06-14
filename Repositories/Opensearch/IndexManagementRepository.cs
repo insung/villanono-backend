@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Options;
 using OpenSearch.Client;
+using OpenSearch.Net;
 
 public class IndexManagementRepository : IIndexManagementRepository
 {
@@ -79,6 +80,70 @@ public class IndexManagementRepository : IIndexManagementRepository
             response?.ApiCall?.HttpStatusCode,
             response?.ApiCall?.DebugInformation,
             "ReIndex failed"
+        );
+    }
+
+    public async ValueTask CreateDefaultIndexTemplate(CancellationToken cancellationToken = default)
+    {
+        var templateName = $"{defaultIndex}_template";
+
+        var request = new
+        {
+            index_patterns = new[] { $"{defaultIndex}-*" },
+            template = new
+            {
+                mappings = new
+                {
+                    properties = new Dictionary<string, object>
+                    {
+                        {
+                            "addressNumber",
+                            new
+                            {
+                                type = "text",
+                                fields = new { keyword = new { type = "keyword" } },
+                            }
+                        },
+                        {
+                            "roadName",
+                            new
+                            {
+                                type = "text",
+                                fields = new { keyword = new { type = "keyword" } },
+                            }
+                        },
+                        {
+                            "si",
+                            new
+                            {
+                                type = "text",
+                                fields = new { keyword = new { type = "keyword" } },
+                            }
+                        },
+                        {
+                            "gu",
+                            new
+                            {
+                                type = "text",
+                                fields = new { keyword = new { type = "keyword" } },
+                            }
+                        },
+                    },
+                },
+            },
+        };
+
+        var response = await opensearchClient.LowLevel.DoRequestAsync<StringResponse>(
+            OpenSearch.Net.HttpMethod.PUT,
+            $"_index_template/{templateName}",
+            cancellationToken,
+            PostData.Serializable(request)
+        );
+
+        OpensearchResponseHandler.CheckResponseFailed(
+            response?.ApiCall?.HttpStatusCode,
+            response?.ApiCall?.DebugInformation,
+            "CreateDefaultIndex failed"
         );
     }
 }
