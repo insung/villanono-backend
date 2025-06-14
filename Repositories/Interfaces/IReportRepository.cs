@@ -1,7 +1,7 @@
-public interface IReportService
+public interface IReportRepository
 {
     /// <summary>
-    /// Daily Insight 리포트 데이터 가져오는 메서드
+    /// Daily Insight 리포트 데이터를 가져오는 메서드
     /// </summary>
     /// <param name="dataType"></param>
     /// <param name="beginDate"></param>
@@ -9,6 +9,7 @@ public interface IReportService
     /// <param name="dong"></param>
     /// <param name="gu"></param>
     /// <param name="si"></param>
+    /// <param name="indexName"></param>
     /// <returns></returns>
     Task<InsightReportDailyModel> GetInsightDaily(
         VillanonoDataType dataType,
@@ -16,11 +17,12 @@ public interface IReportService
         DateOnly endDate,
         string dong,
         string gu,
-        string si = "서울특별시"
+        string si = "서울특별시",
+        string indexName = "villanono-*"
     );
 
     /// <summary>
-    /// Monthly Insight 리포트 데이터 가져오는 메서드
+    /// Monthly Insight 리포트 데이터를 가져오는 메서드
     /// </summary>
     /// <param name="dataType"></param>
     /// <param name="beginYearMonth"></param>
@@ -31,6 +33,7 @@ public interface IReportService
     /// <param name="exclusiveAreaBegin"></param>
     /// <param name="exclusiveAreaEnd"></param>
     /// <param name="constructionYear"></param>
+    /// <param name="indexName"></param>
     /// <returns></returns>
     Task<InsightReportMonthlyModel> GetInsightMonthly(
         VillanonoDataType dataType,
@@ -41,6 +44,7 @@ public interface IReportService
         string si = "서울특별시",
         double? exclusiveAreaBegin = null,
         double? exclusiveAreaEnd = null,
-        int? constructionYear = null
+        int? constructionYear = null,
+        string indexName = "villanono-*"
     );
 }

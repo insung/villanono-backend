@@ -1,36 +1,28 @@
 using System.Reflection;
 using Microsoft.Extensions.Options;
-using OpenSearch.Client;
+using Refit;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.Configure<ElasticSearchSettingsModel>(
-    builder.Configuration.GetSection("ElasticSearch")
-);
+// Opensearch 설정
+builder.Services.Configure<OpensearchSettingsModel>(builder.Configuration.GetSection("Opensearch"));
 
-var elasticSearchURL =
-    Environment.GetEnvironmentVariable("ElasticSearch.URL") ?? "https://localhost:9200";
+builder.Services.AddOpensearchServices(builder.Configuration);
 
-builder.Services.AddSingleton(sp =>
-{
-    var settings = sp.GetRequiredService<IOptions<ElasticSearchSettingsModel>>().Value;
+// Refit HttpClient 설정
+builder.Services.Configure<VWorldSettingsModel>(builder.Configuration.GetSection("VWorld"));
 
-    var clientSettings = new ConnectionSettings(new Uri(elasticSearchURL))
-        .BasicAuthentication(settings.UserName, settings.Password)
-        .ServerCertificateValidationCallback((sender, certificate, chain, sslPolicyErrors) => true)
-        .EnableDebugMode()
-        .DefaultIndex(settings.DefaultIndex);
-    // .Authentication(new ApiKey(settings.ApiKey))
-
-    return new OpenSearchClient(clientSettings);
-});
-
-builder.Services.AddScoped<IVillanonoRepository, VillanonoElasticSearchRepository>();
-builder.Services.AddScoped<IIndexManagementService, IndexManagementService>();
-builder.Services.AddScoped<ICSVReader, CSVReader>();
-builder.Services.AddScoped<IRawDataService, RawDataService>();
-builder.Services.AddScoped<ILocationService, LocationService>();
-builder.Services.AddScoped<IReportService, ReportService>();
+builder
+    .Services.AddRefitClient<IVWorldRepository>()
+    .ConfigureHttpClient(
+        (serviceProvider, client) =>
+        {
+            var vWorldSettings = serviceProvider
+                .GetRequiredService<IOptions<VWorldSettingsModel>>()
+                .Value;
+            client.BaseAddress = new Uri(vWorldSettings.BaseURL);
+        }
+    );
 
 builder
     .Services.AddControllers()

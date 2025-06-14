@@ -7,5 +7,12 @@ public class LocationModel
 
 public class AddressModel : LocationModel
 {
+    public required string AddressNumber { get; set; }
     public required string RoadName { get; set; }
+}
+
+public class GeocodeModel : AddressModel
+{
+    public required double Longitude { get; set; }
+    public required double Latitude { get; set; }
 }

@@ -3,20 +3,26 @@ using Microsoft.Extensions.Options;
 /// <summary>
 /// 빌라노노 데이터 서비스
 /// </summary>
-public class RawDataService : IRawDataService
+public class DataService : IDataService
 {
-    readonly IVillanonoRepository villanonoRepository;
-    readonly ICSVReader csvReader;
+    readonly IIndexManagementRepository indexManagementRepository;
+    readonly IDataRepository dataRepository;
+    readonly ILocationRepository locationRepository;
+    readonly IVillanonoCsvReader villanonoCsvReader;
     readonly int batchSize;
 
-    public RawDataService(
-        IVillanonoRepository villanonoRepository,
-        ICSVReader csvReader,
-        IOptions<ElasticSearchSettingsModel> elasticSearchSettings
+    public DataService(
+        IIndexManagementRepository indexManagementRepository,
+        IDataRepository dataRepository,
+        ILocationRepository locationRepository,
+        IVillanonoCsvReader villanonoCsvReader,
+        IOptions<OpensearchSettingsModel> elasticSearchSettings
     )
     {
-        this.villanonoRepository = villanonoRepository;
-        this.csvReader = csvReader;
+        this.indexManagementRepository = indexManagementRepository;
+        this.dataRepository = dataRepository;
+        this.locationRepository = locationRepository;
+        this.villanonoCsvReader = villanonoCsvReader;
         batchSize = elasticSearchSettings.Value.BatchSize;
     }
 
@@ -31,7 +37,7 @@ public class RawDataService : IRawDataService
     {
         if (dataType == VillanonoDataType.BuySell)
         {
-            return await villanonoRepository.GetData<BuySellModel>(
+            return await dataRepository.GetData<BuySellModel>(
                 dataType,
                 beginDate,
                 endDate,
@@ -42,7 +48,7 @@ public class RawDataService : IRawDataService
         }
         else if (dataType == VillanonoDataType.Rent)
         {
-            return await villanonoRepository.GetData<RentModel>(
+            return await dataRepository.GetData<RentModel>(
                 dataType,
                 beginDate,
                 endDate,
@@ -65,17 +71,17 @@ public class RawDataService : IRawDataService
 
         using var streamReader = new StreamReader(stream);
 
-        if (!await villanonoRepository.HasIndex(indexName))
-            await villanonoRepository.CreateDataIndex<T>(indexName);
+        if (!await indexManagementRepository.HasIndex(indexName))
+            await indexManagementRepository.CreateDataIndex<T>(indexName);
 
-        await foreach (var record in csvReader.Read<T>(streamReader))
+        await foreach (var record in villanonoCsvReader.Read<T>(streamReader))
         {
             records.Add(record);
 
             if (records.Count >= batchSize)
             {
-                await villanonoRepository.BulkInsertData(records, indexName);
-                await villanonoRepository.BulkInsertLocations(records);
+                await dataRepository.BulkInsertData(records, indexName);
+                await locationRepository.BulkInsertLocations(records);
                 records.Clear();
                 totalRowAffected += batchSize;
             }
@@ -84,8 +90,8 @@ public class RawDataService : IRawDataService
         // 마지막에 남은 데이터 전송
         if (records.Count > 0)
         {
-            await villanonoRepository.BulkInsertData(records, indexName);
-            await villanonoRepository.BulkInsertLocations(records);
+            await dataRepository.BulkInsertData(records, indexName);
+            await locationRepository.BulkInsertLocations(records);
             totalRowAffected += records.Count;
         }
 

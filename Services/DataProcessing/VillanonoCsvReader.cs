@@ -2,7 +2,7 @@ using System.Globalization;
 using CsvHelper;
 using CsvHelper.Configuration;
 
-public class CSVReader : ICSVReader
+public class VillanonoCsvReader : IVillanonoCsvReader
 {
     public async IAsyncEnumerable<T> Read<T>(StreamReader stream)
         where T : VillanonoBaseModel

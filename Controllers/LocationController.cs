@@ -47,6 +47,17 @@ public class LocationController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("Test")]
+    public async Task<IActionResult> GetAllAddress(
+        [FromQuery] string Gu,
+        [FromQuery] string roadName,
+        [FromQuery] string Si = "서울특별시"
+    )
+    {
+        var result = await locationService.GetAddress(Si, Gu, roadName);
+        return Ok(result);
+    }
+
     /// <summary>
     /// 빌라노노 위치정보 Bulk Insert
     /// </summary>

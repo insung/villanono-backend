@@ -4,11 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 [Route("api/[controller]")]
 public class IndexManagementController : ControllerBase
 {
-    readonly IIndexManagementService indexManagementService;
+    readonly IIndexManagementRepository indexManagementRepository;
 
-    public IndexManagementController(IIndexManagementService indexManagementService)
+    public IndexManagementController(IIndexManagementRepository indexManagementRepository)
     {
-        this.indexManagementService = indexManagementService;
+        this.indexManagementRepository = indexManagementRepository;
     }
 
     /// <summary>
@@ -18,16 +18,7 @@ public class IndexManagementController : ControllerBase
     [HttpGet("HealthCheck")]
     public async Task<IActionResult> HealthCheck()
     {
-        await indexManagementService.HealthCheck();
-        return Ok();
-    }
-
-    [Obsolete(
-        "Default Index 가 만들어지게 되면 Field 들이 없기 때문에 추후 입력될 Index 들과의 충돌이 발생할 수 있기 때문에 Deprecated 되었습니다."
-    )]
-    [HttpPost("CreateDefaultIndex")]
-    public IActionResult CreateDefaultIndex()
-    {
+        await indexManagementRepository.Ping();
         return Ok();
     }
 
@@ -41,9 +32,9 @@ public class IndexManagementController : ControllerBase
     public async Task<IActionResult> CreateIndex(string indexFullName, VillanonoDataType dataType)
     {
         if (dataType == VillanonoDataType.BuySell)
-            await indexManagementService.CreateDataIndex<BuySellModel>(indexFullName);
+            await indexManagementRepository.CreateDataIndex<BuySellModel>(indexFullName);
         else if (dataType == VillanonoDataType.Rent)
-            await indexManagementService.CreateDataIndex<RentModel>(indexFullName);
+            await indexManagementRepository.CreateDataIndex<RentModel>(indexFullName);
         return Ok();
     }
 
@@ -55,7 +46,7 @@ public class IndexManagementController : ControllerBase
     [HttpDelete("{indexFullName}")]
     public async Task<IActionResult> DeleteIndex(string indexFullName)
     {
-        await indexManagementService.DeleteIndex(indexFullName);
+        await indexManagementRepository.DeleteIndex(indexFullName);
         return Ok();
     }
 
@@ -67,7 +58,7 @@ public class IndexManagementController : ControllerBase
     [HttpPost("{indexFullName}")]
     public async Task<IActionResult> CreateIndex(string indexFullName)
     {
-        var response = await indexManagementService.CreateIndex(indexFullName);
+        var response = await indexManagementRepository.CreateIndex(indexFullName);
         return Ok(response);
     }
 
@@ -80,7 +71,7 @@ public class IndexManagementController : ControllerBase
     [HttpPost("ReIndex/{sourceIndexName}/{targetIndexName}")]
     public async Task<IActionResult> ReIndex(string sourceIndexName, string targetIndexName)
     {
-        await indexManagementService.ReIndex(sourceIndexName, targetIndexName);
+        await indexManagementRepository.ReIndex(sourceIndexName, targetIndexName);
         return Ok();
     }
 }

@@ -1,4 +1,4 @@
-public interface IRawDataService
+public interface IDataService
 {
     /// <summary>
     /// Raw Data 가져오는 메서드

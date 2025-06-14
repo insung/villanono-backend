@@ -2,13 +2,13 @@ using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("api/[controller]")]
-public class RawDataController : ControllerBase
+public class DataController : ControllerBase
 {
-    readonly IRawDataService rawDataService;
+    readonly IDataService dataService;
 
-    public RawDataController(IRawDataService rawDataService)
+    public DataController(IDataService dataService)
     {
-        this.rawDataService = rawDataService;
+        this.dataService = dataService;
     }
 
     /// <summary>
@@ -31,7 +31,7 @@ public class RawDataController : ControllerBase
         [FromQuery] string si = "서울특별시"
     )
     {
-        var models = await rawDataService.GetData(dataType, beginDate, endDate, dong, gu, si);
+        var models = await dataService.GetData(dataType, beginDate, endDate, dong, gu, si);
         return Ok(models);
     }
 
@@ -61,15 +61,12 @@ public class RawDataController : ControllerBase
             var indexName = $"villanono-{dataType.ToString().ToLower()}-{yyyyMMdd}";
 
             if (dataType == VillanonoDataType.BuySell)
-                totalRowAffected = await rawDataService.BulkInsertData<BuySellModel>(
+                totalRowAffected = await dataService.BulkInsertData<BuySellModel>(
                     stream,
                     indexName
                 );
             else
-                totalRowAffected = await rawDataService.BulkInsertData<RentModel>(
-                    stream,
-                    indexName
-                );
+                totalRowAffected = await dataService.BulkInsertData<RentModel>(stream, indexName);
 
             resultMsg.Add(
                 $"Successfully processed {totalRowAffected} records in the index '{indexName}'."

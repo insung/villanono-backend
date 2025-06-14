@@ -1,4 +1,4 @@
-public class ElasticSearchSettingsModel
+public class OpensearchSettingsModel
 {
     public string URL { get; set; } = "https://localhost:9200";
     public string? ApiKey { get; set; } = null;

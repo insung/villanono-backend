@@ -4,11 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 [Route("api/[controller]")]
 public class ReportController : ControllerBase
 {
-    readonly IReportService reportService;
+    readonly IReportRepository reportRepository;
 
-    public ReportController(IReportService reportService)
+    public ReportController(IReportRepository reportRepository)
     {
-        this.reportService = reportService;
+        this.reportRepository = reportRepository;
     }
 
     /// <summary>
@@ -22,7 +22,7 @@ public class ReportController : ControllerBase
     /// <param name="si">시</param>
     /// <returns>통계데이터</returns>
     [HttpPost("Insight/Daily")]
-    public async Task<IActionResult> GetReportInsightDaily(
+    public async Task<IActionResult> GetInsightDaily(
         VillanonoDataType dataType,
         DateOnly beginDate,
         DateOnly endDate,
@@ -31,7 +31,7 @@ public class ReportController : ControllerBase
         string si = "서울특별시"
     )
     {
-        var dailyInsightData = await reportService.GetInsightDaily(
+        var dailyInsightData = await reportRepository.GetInsightDaily(
             dataType,
             beginDate,
             endDate,
@@ -56,7 +56,7 @@ public class ReportController : ControllerBase
     /// <param name="constructionYear">해당 건축년도 이상</param>
     /// <returns>통계데이터</returns>
     [HttpPost("Insight/Monthly")]
-    public async Task<IActionResult> GetReportInsightMonthly(
+    public async Task<IActionResult> GetInsightMonthly(
         VillanonoDataType dataType,
         int beginYearMonth,
         int endYearMonth,
@@ -68,7 +68,7 @@ public class ReportController : ControllerBase
         int? constructionYear = null
     )
     {
-        var dailyInsightData = await reportService.GetInsightMonthly(
+        var dailyInsightData = await reportRepository.GetInsightMonthly(
             dataType,
             beginYearMonth,
             endYearMonth,
