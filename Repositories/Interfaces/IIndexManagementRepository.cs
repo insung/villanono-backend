@@ -1,3 +1,5 @@
+using OpenSearch.Client;
+
 public interface IIndexManagementRepository
 {
     /// <summary>
@@ -49,4 +51,17 @@ public interface IIndexManagementRepository
     /// </summary>
     /// <returns></returns>
     ValueTask CreateDefaultIndexTemplate(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 기본 인덱스 템플릿을 가져오는 메서드
+    /// </summary>
+    /// <returns></returns>
+    ValueTask<GetIndexTemplateResponse> GetDefaultIndexTemplate();
+
+    /// <summary>
+    /// 인덱스 매핑을 가져오는 메서드
+    /// </summary>
+    /// <param name="indexName"></param>
+    /// <returns></returns>
+    ValueTask<GetMappingResponse> GetIndexMapping(string indexName);
 }

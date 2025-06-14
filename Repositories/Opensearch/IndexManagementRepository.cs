@@ -6,6 +6,7 @@ public class IndexManagementRepository : IIndexManagementRepository
 {
     readonly OpenSearchClient opensearchClient;
     readonly string defaultIndex;
+    readonly string defaultTemplateName;
 
     public IndexManagementRepository(
         OpenSearchClient elasticsearchClient,
@@ -14,6 +15,7 @@ public class IndexManagementRepository : IIndexManagementRepository
     {
         this.opensearchClient = elasticsearchClient;
         defaultIndex = elasticSearchSettings.Value.DefaultIndex;
+        defaultTemplateName = $"{defaultIndex}_template";
     }
 
     public async ValueTask CreateDataIndex<T>(string indexName)
@@ -85,7 +87,18 @@ public class IndexManagementRepository : IIndexManagementRepository
 
     public async ValueTask CreateDefaultIndexTemplate(CancellationToken cancellationToken = default)
     {
-        var templateName = $"{defaultIndex}_template";
+        try
+        {
+            var getResponse = await this.GetDefaultIndexTemplate();
+
+            throw new InvalidOperationException(
+                $"Default index template '{defaultTemplateName}' already exists."
+            );
+        }
+        catch (HttpRequestException httpEx)
+        {
+            // Template 이 없으면 404 에러 발생하여 이는 무시함
+        }
 
         var request = new
         {
@@ -135,7 +148,7 @@ public class IndexManagementRepository : IIndexManagementRepository
 
         var response = await opensearchClient.LowLevel.DoRequestAsync<StringResponse>(
             OpenSearch.Net.HttpMethod.PUT,
-            $"_index_template/{templateName}",
+            $"_index_template/{defaultTemplateName}",
             cancellationToken,
             PostData.Serializable(request)
         );
@@ -143,7 +156,34 @@ public class IndexManagementRepository : IIndexManagementRepository
         OpensearchResponseHandler.CheckResponseFailed(
             response?.ApiCall?.HttpStatusCode,
             response?.ApiCall?.DebugInformation,
-            "CreateDefaultIndex failed"
+            "CreateDefaultIndexTemplate failed"
         );
+    }
+
+    public async ValueTask<GetIndexTemplateResponse> GetDefaultIndexTemplate()
+    {
+        var response = await opensearchClient.Indices.GetTemplateAsync(defaultTemplateName);
+
+        OpensearchResponseHandler.CheckResponseFailed(
+            response?.ApiCall?.HttpStatusCode,
+            response?.ApiCall?.DebugInformation,
+            "GetDefaultIndexTemplate failed"
+        );
+
+        return response!;
+    }
+
+    public async ValueTask<GetMappingResponse> GetIndexMapping(string indexName)
+    {
+        var request = new GetMappingRequest(indexName);
+        var response = await opensearchClient.Indices.GetMappingAsync(request);
+
+        OpensearchResponseHandler.CheckResponseFailed(
+            response?.ApiCall?.HttpStatusCode,
+            response?.ApiCall?.DebugInformation,
+            "GetIndexMapping failed"
+        );
+
+        return response!;
     }
 }

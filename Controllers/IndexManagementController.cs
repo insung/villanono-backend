@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
@@ -75,10 +76,26 @@ public class IndexManagementController : ControllerBase
         return Ok();
     }
 
-    [HttpPost("Template")]
+    [HttpPost("DefaultTemplate")]
     public async Task<IActionResult> CreateTemplate()
     {
         await indexManagementRepository.CreateDefaultIndexTemplate();
         return Ok("Default index template created successfully.");
+    }
+
+    [HttpGet("DefaultTemplate")]
+    public async Task<IActionResult> GetDefaultTemplate()
+    {
+        var response = await indexManagementRepository.GetDefaultIndexTemplate();
+        var jsonObject = JsonSerializer.Deserialize<object>(response.ApiCall.ResponseBodyInBytes);
+        return Ok(jsonObject);
+    }
+
+    [HttpGet("Mapping/{indexName}")]
+    public async Task<IActionResult> GetIndexMapping(string indexName)
+    {
+        var response = await indexManagementRepository.GetIndexMapping(indexName);
+        var jsonObject = JsonSerializer.Deserialize<object>(response.ApiCall.ResponseBodyInBytes);
+        return Ok(jsonObject);
     }
 }
