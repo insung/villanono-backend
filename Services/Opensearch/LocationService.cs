@@ -8,7 +8,8 @@ public class LocationService : ILocationService
     readonly IVWorldRepository vworldRepository;
     readonly VWorldSettingsModel vworldSettingsModel;
     private const string locationsIndex = "si-gu-dong";
-    private const string addressIndex = "address";
+    private const string geocodeIndex = "geocode";
+    private const int dailyVWorldAPIQuota = 1000;
 
     public LocationService(
         ILocationRepository locationRepository,
@@ -64,19 +65,50 @@ public class LocationService : ILocationService
         }
     }
 
-    public async Task<IList<AddressModel>> GetAddress(string Si, string Gu, string roadName)
+    public async Task<IList<AddressModel>> GetAddress(
+        string Si,
+        string Gu = "",
+        string roadName = ""
+    )
     {
-        return await locationRepository.GetAllAddress(Si, Gu, roadName);
+        return await locationRepository.GetAddress(Si, Gu, roadName);
     }
 
-    public async Task UpsertGeocodes(IList<AddressModel> addresses)
+    public async Task BulkInsertGeocode(IList<AddressModel> addressModels)
     {
-        foreach (var address in addresses)
+        int requestCount = 0;
+        foreach (var address in addressModels)
         {
-            var geocodeResponse = await vworldRepository.GetCoordinatesAsync(
-                key: vworldSettingsModel.ApiKey,
-                address: $"{address.Gu} {address.RoadName}"
-            );
+            if (requestCount >= dailyVWorldAPIQuota)
+            {
+                throw new InvalidOperationException(
+                    "일일 VWorld API 호출 한도를 초과했습니다. 나중에 다시 시도해주세요."
+                );
+            }
+
+            if (
+                !await locationRepository.HasGeocode(
+                    address.Si,
+                    address.Gu,
+                    address.RoadName,
+                    geocodeIndex
+                )
+            )
+            {
+                var geocodeResponse = await vworldRepository.GetCoordinatesAsync(
+                    key: vworldSettingsModel.ApiKey,
+                    address: $"{address.Gu} {address.RoadName}"
+                );
+
+                var point = geocodeResponse?.Response?.Result?.Point;
+                double? lat = double.TryParse(point?.Y, out double pLat) ? pLat : null;
+                double? lon = double.TryParse(point?.X, out double pLon) ? pLon : null;
+
+                var geoCode = new GeocodeModel(address, lat, lon);
+
+                await locationRepository.UpsertGeocode(geoCode);
+                requestCount++;
+            }
         }
     }
 }

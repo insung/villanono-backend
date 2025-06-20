@@ -54,8 +54,9 @@ public class LocationController : ControllerBase
         [FromQuery] string Si = "서울특별시"
     )
     {
-        var result = await locationService.GetAddress(Si, Gu, roadName);
-        return Ok(result);
+        var addressList = await locationService.GetAddress(Si);
+        await locationService.BulkInsertGeocode(addressList);
+        return Ok(addressList);
     }
 
     /// <summary>

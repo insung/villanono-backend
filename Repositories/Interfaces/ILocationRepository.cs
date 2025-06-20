@@ -47,10 +47,28 @@ public interface ILocationRepository
     /// <param name="roadName"></param>
     /// <param name="indexName"></param>
     /// <returns></returns>
-    Task<IList<AddressModel>> GetAllAddress(
+    Task<IList<AddressModel>> GetAddress(
         string Si,
-        string Gu,
-        string roadName,
+        string Gu = "",
+        string roadName = "",
         string indexName = "villanono-*"
     );
+
+    /// <summary>
+    /// 지오코드 정보가 있는지 확인하는 메서드
+    /// </summary>
+    /// <param name="Si"></param>
+    /// <param name="Gu"></param>
+    /// <param name="roadName"></param>
+    /// <param name="indexName"></param>
+    /// <returns></returns>
+    ValueTask<bool> HasGeocode(string Si, string Gu, string roadName, string indexName = "geocode");
+
+    /// <summary>
+    /// 지오코드 정보를 인덱스에 삽입하거나 업데이트하는 메서드
+    /// </summary>
+    /// <param name="geocodeModel"></param>
+    /// <param name="indexName"></param>
+    /// <returns></returns>
+    ValueTask UpsertGeocode(GeocodeModel geocodeModel, string indexName = "geocode");
 }

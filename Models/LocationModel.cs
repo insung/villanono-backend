@@ -1,18 +1,44 @@
+using System.Diagnostics.CodeAnalysis;
+
 public class LocationModel
 {
-    public required string Si { get; set; }
-    public required string Gu { get; set; }
-    public required string Dong { get; set; }
+    public required string Si { get; init; }
+    public required string Gu { get; init; }
+    public required string Dong { get; init; }
+
+    [SetsRequiredMembers]
+    public LocationModel(string si, string gu, string dong)
+    {
+        Si = si;
+        Gu = gu;
+        Dong = dong;
+    }
 }
 
 public class AddressModel : LocationModel
 {
-    public required string AddressNumber { get; set; }
-    public required string RoadName { get; set; }
+    public required string AddressNumber { get; init; }
+    public required string RoadName { get; init; }
+
+    [SetsRequiredMembers]
+    public AddressModel(string si, string gu, string dong, string addressNumber, string roadName)
+        : base(si, gu, dong)
+    {
+        AddressNumber = addressNumber;
+        RoadName = roadName;
+    }
 }
 
 public class GeocodeModel : AddressModel
 {
-    public required double Longitude { get; set; }
-    public required double Latitude { get; set; }
+    public double? Longitude { get; set; }
+    public double? Latitude { get; set; }
+
+    [SetsRequiredMembers]
+    public GeocodeModel(AddressModel address, double? latitude, double? longitude)
+        : base(address.Si, address.Gu, address.Dong, address.AddressNumber, address.RoadName)
+    {
+        Latitude = latitude;
+        Longitude = longitude;
+    }
 }

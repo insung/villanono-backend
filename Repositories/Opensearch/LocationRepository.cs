@@ -30,12 +30,11 @@ public class LocationRepository : ILocationRepository
             record =>
             {
                 var id = $"{record.Si}-{record.Gu}-{record.Dong}";
-                var locationRecord = new LocationModel
-                {
-                    Si = record.Si,
-                    Gu = record.Gu,
-                    Dong = record.Dong,
-                };
+                var locationRecord = new LocationModel(
+                    si: record.Si,
+                    gu: record.Gu,
+                    dong: record.Dong
+                );
                 var bulkOperaion = new BulkCreateOperation<object>(locationRecord) { Id = id };
                 bulkOperations.Add(bulkOperaion);
             }
@@ -43,87 +42,6 @@ public class LocationRepository : ILocationRepository
 
         var bulkRequest = new BulkRequest(indexName) { Operations = bulkOperations.ToList() };
         var response = await opensearchClient.BulkAsync(bulkRequest);
-    }
-
-    public async Task<IList<AddressModel>> GetAllAddress(
-        string Si,
-        string Gu,
-        string roadName,
-        string indexName = "villanono-*"
-    )
-    {
-        var allAddresses = new List<AddressModel>();
-        CompositeKey? searchAfter = null;
-
-        do
-        {
-            var response = await opensearchClient.SearchAsync<AddressModel>(s =>
-                s.Index(indexName)
-                    .Size(0)
-                    .Query(q =>
-                        q.Bool(b =>
-                            b.Must(
-                                m => m.Term(t => t.Field("si.keyword").Value(Si.Trim())),
-                                m => m.Term(t => t.Field("gu.keyword").Value(Gu.Trim())),
-                                m =>
-                                    m.Prefix(p =>
-                                        p.Field("roadName.keyword").Value(roadName.Trim())
-                                    )
-                            )
-                        )
-                    )
-                    // 2. 필터링된 결과를 대상으로 집계를 수행합니다.
-                    .Aggregations(aggs =>
-                        aggs.Composite(
-                            "distinct_addresses",
-                            c =>
-                                c
-                                // 한 번에 가져올 고유 조합의 최대 개수를 지정합니다.
-                                .Size(1000)
-                                    .After(searchAfter)
-                                    // =====> GROUP BY 할 필드들을 여기에 모두 정의합니다 <=====
-                                    .Sources(sources =>
-                                        sources
-                                            .Terms("si", t => t.Field("si.keyword"))
-                                            .Terms("gu", t => t.Field("gu.keyword"))
-                                            .Terms("dong", t => t.Field("dong.keyword"))
-                                            .Terms("roadName", t => t.Field("roadName.keyword"))
-                                            .Terms(
-                                                "addressNumber",
-                                                t => t.Field("addressNumber.keyword")
-                                            )
-                                    )
-                        )
-                    )
-            );
-
-            OpensearchResponseHandler.CheckResponseFailed(
-                response?.ApiCall?.HttpStatusCode,
-                response?.ApiCall?.DebugInformation,
-                "GetAllAddress failed"
-            );
-
-            var compositeAgg = response.Aggregations.Composite("distinct_addresses");
-
-            if (!compositeAgg.Buckets.Any())
-                break;
-
-            var distinctAddresses = compositeAgg.Buckets.Select(b => new AddressModel
-            {
-                Si = b.Key["si"]?.ToString() ?? "",
-                Gu = b.Key["gu"]?.ToString() ?? "",
-                Dong = b.Key["dong"]?.ToString() ?? "",
-                RoadName = b.Key["roadName"]?.ToString() ?? "",
-                AddressNumber = b.Key["addressNumber"]?.ToString() ?? "",
-            });
-
-            allAddresses.AddRange(distinctAddresses);
-
-            // 4. 다음 페이지를 위한 커서를 업데이트합니다.
-            searchAfter = compositeAgg.AfterKey;
-        } while (searchAfter != null && searchAfter.Count > 0); // 커서가 있는 동안 계속 반복
-
-        return allAddresses;
     }
 
     public async Task<IList<string>> GetAllDong(
@@ -211,5 +129,117 @@ public class LocationRepository : ILocationRepository
             .Buckets.Select(bucket => bucket.Key)
             .ToList();
         return result;
+    }
+
+    public async Task<IList<AddressModel>> GetAddress(
+        string Si,
+        string Gu = "",
+        string roadName = "",
+        string indexName = "villanono-*"
+    )
+    {
+        var allAddresses = new List<AddressModel>();
+        CompositeKey? searchAfter = null;
+
+        do
+        {
+            var response = await opensearchClient.SearchAsync<AddressModel>(s =>
+                s.Index(indexName)
+                    .Size(0)
+                    .Query(q =>
+                    {
+                        QueryContainer query = q.Term(t => t.Field("si.keyword").Value(Si.Trim()));
+
+                        if (!string.IsNullOrWhiteSpace(Gu))
+                        {
+                            query &= q.Term(t => t.Field("gu.keyword").Value(Gu.Trim()));
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(roadName))
+                        {
+                            query &= q.Prefix(p =>
+                                p.Field("roadName.keyword").Value(roadName.Trim())
+                            );
+                        }
+
+                        return query;
+                    })
+                    // 2. 필터링된 결과를 대상으로 집계를 수행합니다.
+                    .Aggregations(aggs =>
+                        aggs.Composite(
+                            "distinct_addresses",
+                            c =>
+                                c
+                                // 한 번에 가져올 고유 조합의 최대 개수를 지정합니다.
+                                .Size(1000)
+                                    .After(searchAfter)
+                                    // =====> GROUP BY 할 필드들을 여기에 모두 정의합니다 <=====
+                                    .Sources(sources =>
+                                        sources
+                                            .Terms("si", t => t.Field("si.keyword"))
+                                            .Terms("gu", t => t.Field("gu.keyword"))
+                                            .Terms("dong", t => t.Field("dong.keyword"))
+                                            .Terms("roadName", t => t.Field("roadName.keyword"))
+                                    // .Terms(
+                                    //     "addressNumber",
+                                    //     t => t.Field("addressNumber.keyword")
+                                    // )
+                                    )
+                        )
+                    )
+            );
+
+            OpensearchResponseHandler.CheckResponseFailed(
+                response?.ApiCall?.HttpStatusCode,
+                response?.ApiCall?.DebugInformation,
+                "GetAllAddress failed"
+            );
+
+            var compositeAgg = response!.Aggregations.Composite("distinct_addresses");
+
+            if (!compositeAgg.Buckets.Any())
+                break;
+
+            var distinctAddresses = compositeAgg.Buckets.Select(b => new AddressModel(
+                si: b.Key["si"]?.ToString() ?? "",
+                gu: b.Key["gu"]?.ToString() ?? "",
+                dong: b.Key["dong"]?.ToString() ?? "",
+                roadName: b.Key["roadName"]?.ToString() ?? "",
+                addressNumber: "" // b.Key["addressNumber"]?.ToString() ?? "",
+            ));
+
+            allAddresses.AddRange(distinctAddresses);
+
+            // 4. 다음 페이지를 위한 커서를 업데이트합니다.
+            searchAfter = compositeAgg.AfterKey;
+        } while (searchAfter != null && searchAfter.Count > 0); // 커서가 있는 동안 계속 반복
+
+        return allAddresses;
+    }
+
+    public async ValueTask<bool> HasGeocode(
+        string Si,
+        string Gu,
+        string roadName,
+        string indexName = "geocode"
+    )
+    {
+        var id = IdGenerator.GenerateDeterministicId(Si, Gu, roadName);
+        var getResponse = await opensearchClient.GetAsync<GeocodeModel>(
+            id,
+            g => g.Index(indexName)
+        );
+
+        return getResponse?.Found ?? false;
+    }
+
+    public async ValueTask UpsertGeocode(GeocodeModel geocodeModel, string indexName = "geocode")
+    {
+        var id = IdGenerator.GenerateDeterministicId(
+            geocodeModel.Si,
+            geocodeModel.Gu,
+            geocodeModel.RoadName
+        );
+        await opensearchClient.IndexAsync(geocodeModel, i => i.Index(indexName).Id(id));
     }
 }
