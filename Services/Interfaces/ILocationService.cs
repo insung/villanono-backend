@@ -45,4 +45,10 @@ public interface ILocationService
     /// <param name="addressModels"></param>
     /// <returns></returns>
     Task BulkInsertGeocode(IList<AddressModel> addressModels);
+
+    /// <summary>
+    /// 지오코드 인덱스에 저장된 총 개수를 반환하는 메서드
+    /// </summary>
+    /// <returns></returns>
+    ValueTask<int> GetGeocodeCount();
 }

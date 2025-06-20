@@ -88,4 +88,11 @@ public class LocationController : ControllerBase
 
         return Ok();
     }
+
+    [HttpGet("GeocodeCount")]
+    public async Task<IActionResult> GetGeocodeCount()
+    {
+        var count = await locationService.GetGeocodeCount();
+        return Ok(count);
+    }
 }

@@ -71,4 +71,11 @@ public interface ILocationRepository
     /// <param name="indexName"></param>
     /// <returns></returns>
     ValueTask UpsertGeocode(GeocodeModel geocodeModel, string indexName = "geocode");
+
+    /// <summary>
+    /// 지오코드 총 개수를 반환하는 메서드
+    /// </summary>
+    /// <param name="indexName"></param>
+    /// <returns></returns>
+    ValueTask<int> GetGeocodeCount(string indexName = "geocode");
 }

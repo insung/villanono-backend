@@ -242,4 +242,15 @@ public class LocationRepository : ILocationRepository
         );
         await opensearchClient.IndexAsync(geocodeModel, i => i.Index(indexName).Id(id));
     }
+
+    public async ValueTask<int> GetGeocodeCount(string indexName = "geocode")
+    {
+        var response = await opensearchClient.CountAsync<GeocodeModel>(c => c.Index(indexName));
+        OpensearchResponseHandler.CheckResponseFailed(
+            response?.ApiCall?.HttpStatusCode,
+            response?.ApiCall?.DebugInformation,
+            "GetGeocodeCount failed"
+        );
+        return (int)response!.Count;
+    }
 }

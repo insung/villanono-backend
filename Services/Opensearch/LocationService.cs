@@ -111,4 +111,9 @@ public class LocationService : ILocationService
             }
         }
     }
+
+    public async ValueTask<int> GetGeocodeCount()
+    {
+        return await locationRepository.GetGeocodeCount(geocodeIndex);
+    }
 }
