@@ -118,9 +118,13 @@ public class LocationController : ControllerBase
     /// 지오코드 정보를 인덱스에 삽입하는 API
     /// </summary>
     /// <param name="si"></param>
+    /// <param name="vWorldAPIRequestQuota"></param>
     /// <returns></returns>
     [HttpPost("StartInsertGeocode")]
-    public async Task<IActionResult> StartInsertGeocode([FromQuery] string si = "서울특별시")
+    public async Task<IActionResult> StartInsertGeocode(
+        [FromQuery] string si = "서울특별시",
+        [FromQuery] int vWorldAPIRequestQuota = 1000
+    )
     {
         await jobQueue.EnqueueAsync(
             async (serviceProvider, cancellationToken) =>
@@ -130,7 +134,7 @@ public class LocationController : ControllerBase
                 var service = serviceProvider.GetRequiredService<ILocationService>();
 
                 var addressList = await repository.GetAddress(si);
-                await service.BulkInsertGeocode(addressList);
+                await service.BulkInsertGeocode(addressList, vWorldAPIRequestQuota);
             }
         );
 

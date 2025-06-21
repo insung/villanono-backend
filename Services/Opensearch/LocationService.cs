@@ -9,7 +9,6 @@ public class LocationService : ILocationService
     readonly VWorldSettingsModel vworldSettingsModel;
     private const string locationsIndex = "si-gu-dong";
     private const string geocodeIndex = "geocode";
-    private const int dailyVWorldAPIQuota = 1000;
 
     public LocationService(
         ILocationRepository locationRepository,
@@ -50,12 +49,15 @@ public class LocationService : ILocationService
         }
     }
 
-    public async Task BulkInsertGeocode(IList<AddressModel> addressModels)
+    public async Task BulkInsertGeocode(
+        IList<AddressModel> addressModels,
+        int vWorldAPIRequestQuota = 1000
+    )
     {
         int requestCount = 0;
         foreach (var address in addressModels)
         {
-            if (requestCount >= dailyVWorldAPIQuota)
+            if (requestCount >= vWorldAPIRequestQuota)
             {
                 throw new InvalidOperationException(
                     "일일 VWorld API 호출 한도를 초과했습니다. 나중에 다시 시도해주세요."

@@ -13,6 +13,7 @@ public interface ILocationService
     /// 지오코드 정보를 인덱스에 삽입하거나 업데이트하는 메서드
     /// </summary>
     /// <param name="addressModels"></param>
+    /// <param name="vWorldAPIRequestQuota"></param>
     /// <returns></returns>
-    Task BulkInsertGeocode(IList<AddressModel> addressModels);
+    Task BulkInsertGeocode(IList<AddressModel> addressModels, int vWorldAPIRequestQuota = 1000);
 }
