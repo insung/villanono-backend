@@ -4,6 +4,9 @@ using Refit;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Healthcheck 서비스 추가
+builder.Services.AddHealthChecks();
+
 // Opensearch 설정
 builder.Services.Configure<OpensearchSettingsModel>(builder.Configuration.GetSection("Opensearch"));
 

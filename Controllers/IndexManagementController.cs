@@ -16,8 +16,8 @@ public class IndexManagementController : ControllerBase
     /// 살아있는지 확인
     /// </summary>
     /// <returns></returns>
-    [HttpGet("HealthCheck")]
-    public async Task<IActionResult> HealthCheck()
+    [HttpGet("Ping")]
+    public async Task<IActionResult> Ping()
     {
         await indexManagementRepository.Ping();
         return Ok();
