@@ -26,21 +26,6 @@ public class LocationService : ILocationService
         this.vworldSettingsModel = vworldSettingsModel.Value;
     }
 
-    public async Task<IList<string>> GetAllSi()
-    {
-        return await locationRepository.GetAllSi(locationsIndex);
-    }
-
-    public async Task<IList<string>> GetAllGu(string Si)
-    {
-        return await locationRepository.GetAllGu(Si, locationsIndex);
-    }
-
-    public async Task<IList<string>> GetAllDong(string Si, string Gu)
-    {
-        return await locationRepository.GetAllDong(Si, Gu, locationsIndex);
-    }
-
     public async Task BulkInsertLocations<T>(Stream stream)
         where T : VillanonoBaseModel
     {
@@ -63,15 +48,6 @@ public class LocationService : ILocationService
         {
             await locationRepository.BulkInsertLocations(records, locationsIndex);
         }
-    }
-
-    public async Task<IList<AddressModel>> GetAddress(
-        string Si,
-        string Gu = "",
-        string roadName = ""
-    )
-    {
-        return await locationRepository.GetAddress(Si, Gu, roadName);
     }
 
     public async Task BulkInsertGeocode(IList<AddressModel> addressModels)
@@ -110,10 +86,5 @@ public class LocationService : ILocationService
                 requestCount++;
             }
         }
-    }
-
-    public async ValueTask<int> GetGeocodeCount()
-    {
-        return await locationRepository.GetGeocodeCount(geocodeIndex);
     }
 }

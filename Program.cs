@@ -50,6 +50,9 @@ builder.WebHost.ConfigureKestrel(options =>
     options.Limits.MaxRequestBodySize = 100_000_000; // 100MB로 증가
 });
 
+builder.Services.AddSingleton<IJobQueue, JobQueue>();
+builder.Services.AddHostedService<QueuedHostedService>();
+
 var app = builder.Build();
 
 app.UseSwagger();

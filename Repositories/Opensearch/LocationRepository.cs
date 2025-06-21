@@ -79,12 +79,12 @@ public class LocationRepository : ILocationRepository
         return result;
     }
 
-    public async Task<IList<string>> GetAllGu(string Si, string indexName = "si-gu-dong")
+    public async Task<IList<string>> GetAllGu(string si, string indexName = "si-gu-dong")
     {
         var response = await opensearchClient.SearchAsync<LocationModel>(s =>
             s.Index(indexName)
                 .Size(0) // 결과 문서는 필요하지 않으므로 Size 0
-                .Query(q => q.Term(t => t.Field(f => f.Si.Suffix("keyword")).Value(Si)))
+                .Query(q => q.Term(t => t.Field(f => f.Si.Suffix("keyword")).Value(si)))
                 .Aggregations(a =>
                     a.Terms("gu", t => t.Field(f => f.Gu.Suffix("keyword")).Size(100))
                 )
@@ -132,8 +132,8 @@ public class LocationRepository : ILocationRepository
     }
 
     public async Task<IList<AddressModel>> GetAddress(
-        string Si,
-        string Gu = "",
+        string si,
+        string gu = "",
         string roadName = "",
         string indexName = "villanono-*"
     )
@@ -148,11 +148,11 @@ public class LocationRepository : ILocationRepository
                     .Size(0)
                     .Query(q =>
                     {
-                        QueryContainer query = q.Term(t => t.Field("si.keyword").Value(Si.Trim()));
+                        QueryContainer query = q.Term(t => t.Field("si.keyword").Value(si.Trim()));
 
-                        if (!string.IsNullOrWhiteSpace(Gu))
+                        if (!string.IsNullOrWhiteSpace(gu))
                         {
-                            query &= q.Term(t => t.Field("gu.keyword").Value(Gu.Trim()));
+                            query &= q.Term(t => t.Field("gu.keyword").Value(gu.Trim()));
                         }
 
                         if (!string.IsNullOrWhiteSpace(roadName))
@@ -218,13 +218,13 @@ public class LocationRepository : ILocationRepository
     }
 
     public async ValueTask<bool> HasGeocode(
-        string Si,
-        string Gu,
+        string si,
+        string gu,
         string roadName,
         string indexName = "geocode"
     )
     {
-        var id = IdGenerator.GenerateDeterministicId(Si, Gu, roadName);
+        var id = IdGenerator.GenerateDeterministicId(si, gu, roadName);
         var getResponse = await opensearchClient.GetAsync<GeocodeModel>(
             id,
             g => g.Index(indexName)

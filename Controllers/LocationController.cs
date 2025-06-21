@@ -4,11 +4,19 @@ using Microsoft.AspNetCore.Mvc;
 [Route("api/[controller]")]
 public class LocationController : ControllerBase
 {
+    readonly ILocationRepository locationRepository;
     readonly ILocationService locationService;
+    readonly IJobQueue jobQueue;
 
-    public LocationController(ILocationService locationService)
+    public LocationController(
+        ILocationRepository locationRepository,
+        ILocationService locationService,
+        IJobQueue jobQueue
+    )
     {
+        this.locationRepository = locationRepository;
         this.locationService = locationService;
+        this.jobQueue = jobQueue;
     }
 
     /// <summary>
@@ -18,45 +26,33 @@ public class LocationController : ControllerBase
     [HttpGet("Si")]
     public async Task<IActionResult> GetAllSi()
     {
-        var result = await locationService.GetAllSi();
+        var result = await locationRepository.GetAllSi();
         return Ok(result);
     }
 
     /// <summary>
     /// 선택한 "시"에 대한 "구" 목록을 가져오는 API
     /// </summary>
-    /// <param name="Si">시 이름</param>
+    /// <param name="si">시 이름</param>
     /// <returns></returns>
     [HttpGet("Si/{Si}/Gu")]
-    public async Task<IActionResult> GetAllGu([FromRoute] string Si)
+    public async Task<IActionResult> GetAllGu([FromRoute] string si)
     {
-        var result = await locationService.GetAllGu(Si);
+        var result = await locationRepository.GetAllGu(si);
         return Ok(result);
     }
 
     /// <summary>
     /// 선택한 "시"와 "구"에 대한 "동" 목록을 가져오는 API
     /// </summary>
-    /// <param name="Si">시 이름</param>
-    /// <param name="Gu">구 이름</param>
+    /// <param name="si">시 이름</param>
+    /// <param name="gu">구 이름</param>
     /// <returns></returns>
     [HttpGet("Si/{Si}/Gu/{Gu}/Dong")]
-    public async Task<IActionResult> GetAllDong([FromRoute] string Si, [FromRoute] string Gu)
+    public async Task<IActionResult> GetAllDong([FromRoute] string si, [FromRoute] string gu)
     {
-        var result = await locationService.GetAllDong(Si, Gu);
+        var result = await locationRepository.GetAllDong(si, gu);
         return Ok(result);
-    }
-
-    [HttpGet("Test")]
-    public async Task<IActionResult> GetAllAddress(
-        [FromQuery] string Gu,
-        [FromQuery] string roadName,
-        [FromQuery] string Si = "서울특별시"
-    )
-    {
-        var addressList = await locationService.GetAddress(Si);
-        await locationService.BulkInsertGeocode(addressList);
-        return Ok(addressList);
     }
 
     /// <summary>
@@ -89,10 +85,55 @@ public class LocationController : ControllerBase
         return Ok();
     }
 
-    [HttpGet("GeocodeCount")]
+    /// <summary>
+    /// "시", "구", "도로명"에 대한 주소 정보를 가져오는 API
+    /// </summary>
+    /// <param name="gu"></param>
+    /// <param name="roadName"></param>
+    /// <param name="si"></param>
+    /// <returns></returns>
+    [HttpGet("GetAddress")]
+    public async Task<IActionResult> GetAddress(
+        [FromQuery] string gu = "",
+        [FromQuery] string roadName = "",
+        [FromQuery] string si = "서울특별시"
+    )
+    {
+        var addressList = await locationRepository.GetAddress(si, gu, roadName);
+        return Ok(addressList);
+    }
+
+    /// <summary>
+    /// 지오코드 정보의 개수를 반환하는 API
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("GetGeocodeCount")]
     public async Task<IActionResult> GetGeocodeCount()
     {
-        var count = await locationService.GetGeocodeCount();
+        var count = await locationRepository.GetGeocodeCount();
         return Ok(count);
+    }
+
+    /// <summary>
+    /// 지오코드 정보를 인덱스에 삽입하는 API
+    /// </summary>
+    /// <param name="si"></param>
+    /// <returns></returns>
+    [HttpPost("StartInsertGeocode")]
+    public async Task<IActionResult> StartInsertGeocode([FromQuery] string si = "서울특별시")
+    {
+        await jobQueue.EnqueueAsync(
+            async (serviceProvider, cancellationToken) =>
+            {
+                // 이 람다 식 안에서 필요한 서비스들을 가져와 사용합니다.
+                var repository = serviceProvider.GetRequiredService<ILocationRepository>();
+                var service = serviceProvider.GetRequiredService<ILocationService>();
+
+                var addressList = await repository.GetAddress(si);
+                await service.BulkInsertGeocode(addressList);
+            }
+        );
+
+        return Accepted("Job was queued successfully.");
     }
 }
