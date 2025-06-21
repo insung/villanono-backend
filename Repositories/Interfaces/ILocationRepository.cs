@@ -4,7 +4,7 @@ public interface ILocationRepository
     /// Location 정보를 담을 수 있는 인덱스를 생성하는 메서드
     /// </summary>
     /// <returns></returns>
-    ValueTask CreateIndex(string indexName);
+    Task CreateIndex(string indexName);
 
     /// <summary>
     /// 빌라노노의 시, 구, 동에 대한 정보를 Bulk 로 삽입하는 메서드. 중복된 것은 Skip 됨.
@@ -40,19 +40,30 @@ public interface ILocationRepository
     Task<IList<string>> GetAllDong(string Si, string Gu, string indexName = "si-gu-dong");
 
     /// <summary>
+    /// 빌라노노의 시, 구, 도로명에 대한 유니크한 주소 정보를 반환하는 메서드
+    /// </summary>
+    /// <param name="si"></param>
+    /// <param name="indexName"></param>
+    /// <returns></returns>
+    Task<IList<AddressModel>> GetDistinctAddress(string si, string indexName = "villanono-*");
+
+    /// <summary>
     /// 전달받은 시, 구, 도로명에 대한 모든 주소 정보를 반환하는 메서드
     /// </summary>
+    /// <param name="queryStrategy"></param>
     /// <param name="Si"></param>
     /// <param name="Gu"></param>
     /// <param name="roadName"></param>
     /// <param name="indexName"></param>
     /// <returns></returns>
-    Task<IList<AddressModel>> GetAddress(
+    Task<IList<T>> GetAddress<T>(
+        IAddressQueryStrategy<T> queryStrategy,
         string Si,
         string Gu = "",
         string roadName = "",
-        string indexName = "villanono-*"
-    );
+        string indexName = "geocode"
+    )
+        where T : AddressModel;
 
     /// <summary>
     /// 지오코드 정보가 있는지 확인하는 메서드
@@ -62,7 +73,7 @@ public interface ILocationRepository
     /// <param name="roadName"></param>
     /// <param name="indexName"></param>
     /// <returns></returns>
-    ValueTask<bool> HasGeocode(string Si, string Gu, string roadName, string indexName = "geocode");
+    Task<bool> HasGeocode(string Si, string Gu, string roadName, string indexName = "geocode");
 
     /// <summary>
     /// 지오코드 정보를 인덱스에 삽입하거나 업데이트하는 메서드
@@ -70,12 +81,12 @@ public interface ILocationRepository
     /// <param name="geocodeModel"></param>
     /// <param name="indexName"></param>
     /// <returns></returns>
-    ValueTask UpsertGeocode(GeocodeModel geocodeModel, string indexName = "geocode");
+    Task UpsertGeocode(GeocodeModel geocodeModel, string indexName = "geocode");
 
     /// <summary>
     /// 지오코드 총 개수를 반환하는 메서드
     /// </summary>
     /// <param name="indexName"></param>
     /// <returns></returns>
-    ValueTask<int> GetGeocodeCount(string indexName = "geocode");
+    Task<int> GetGeocodeCount(string indexName = "geocode");
 }

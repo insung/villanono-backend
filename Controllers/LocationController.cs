@@ -88,19 +88,39 @@ public class LocationController : ControllerBase
     /// <summary>
     /// "시", "구", "도로명"에 대한 주소 정보를 가져오는 API
     /// </summary>
+    /// <param name="si"></param>
     /// <param name="gu"></param>
     /// <param name="roadName"></param>
-    /// <param name="si"></param>
     /// <returns></returns>
     [HttpGet("GetAddress")]
     public async Task<IActionResult> GetAddress(
+        [FromQuery] string si = "서울특별시",
         [FromQuery] string gu = "",
-        [FromQuery] string roadName = "",
-        [FromQuery] string si = "서울특별시"
+        [FromQuery] string roadName = ""
     )
     {
-        var addressList = await locationRepository.GetAddress(si, gu, roadName);
+        var addressStrategy = new AddressModelQueryStrategy();
+        var addressList = await locationRepository.GetAddress(addressStrategy, si, gu, roadName);
         return Ok(addressList);
+    }
+
+    /// <summary>
+    /// 지오코드 정보를 가져오는 API
+    /// </summary>
+    /// <param name="si"></param>
+    /// <param name="gu"></param>
+    /// <param name="roadName"></param>
+    /// <returns></returns>
+    [HttpGet("GetGeocode")]
+    public async Task<IActionResult> GetGeocode(
+        [FromQuery] string si = "서울특별시",
+        [FromQuery] string gu = "",
+        [FromQuery] string roadName = ""
+    )
+    {
+        var geocodeStrategy = new GeocodeModelQueryStrategy();
+        var geocodeList = await locationRepository.GetAddress(geocodeStrategy, si, gu, roadName);
+        return Ok(geocodeList);
     }
 
     /// <summary>
@@ -133,7 +153,7 @@ public class LocationController : ControllerBase
                 var repository = serviceProvider.GetRequiredService<ILocationRepository>();
                 var service = serviceProvider.GetRequiredService<ILocationService>();
 
-                var addressList = await repository.GetAddress(si);
+                var addressList = await repository.GetDistinctAddress(si);
                 await service.BulkInsertGeocode(addressList, vWorldAPIRequestQuota);
             }
         );

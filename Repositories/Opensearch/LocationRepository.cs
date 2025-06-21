@@ -10,7 +10,7 @@ public class LocationRepository : ILocationRepository
         this.opensearchClient = elasticsearchClient;
     }
 
-    public async ValueTask CreateIndex(string indexName)
+    public async Task CreateIndex(string indexName)
     {
         var response = await opensearchClient.Indices.CreateAsync(indexName);
         OpensearchResponseHandler.CheckResponseFailed(
@@ -131,10 +131,8 @@ public class LocationRepository : ILocationRepository
         return result;
     }
 
-    public async Task<IList<AddressModel>> GetAddress(
+    public async Task<IList<AddressModel>> GetDistinctAddress(
         string si,
-        string gu = "",
-        string roadName = "",
         string indexName = "villanono-*"
     )
     {
@@ -149,19 +147,6 @@ public class LocationRepository : ILocationRepository
                     .Query(q =>
                     {
                         QueryContainer query = q.Term(t => t.Field("si.keyword").Value(si.Trim()));
-
-                        if (!string.IsNullOrWhiteSpace(gu))
-                        {
-                            query &= q.Term(t => t.Field("gu.keyword").Value(gu.Trim()));
-                        }
-
-                        if (!string.IsNullOrWhiteSpace(roadName))
-                        {
-                            query &= q.Prefix(p =>
-                                p.Field("roadName.keyword").Value(roadName.Trim())
-                            );
-                        }
-
                         return query;
                     })
                     // 2. 필터링된 결과를 대상으로 집계를 수행합니다.
@@ -217,7 +202,72 @@ public class LocationRepository : ILocationRepository
         return allAddresses;
     }
 
-    public async ValueTask<bool> HasGeocode(
+    public async Task<IList<T>> GetAddress<T>(
+        IAddressQueryStrategy<T> strategy,
+        string si,
+        string gu = "",
+        string roadName = "",
+        string indexName = "geocode"
+    )
+        where T : AddressModel
+    {
+        var addressList = new List<T>();
+        IReadOnlyCollection<object>? searchAfterValues = null;
+
+        do
+        {
+            var response = await opensearchClient.SearchAsync<T>(s =>
+                s.Index(indexName)
+                    // 1. 실제 문서를 가져와야 하므로 Size를 0이 아닌 적절한 값으로 설정합니다.
+                    .Size(1000)
+                    // 2. 필터링 로직은 그대로 사용합니다.
+                    .Query(q =>
+                    {
+                        QueryContainer query = q.Term(t => t.Field("si.keyword").Value(si.Trim()));
+
+                        if (!string.IsNullOrWhiteSpace(gu))
+                        {
+                            query &= q.Term(t => t.Field("gu.keyword").Value(gu.Trim()));
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(roadName))
+                        {
+                            query &= q.Prefix(p =>
+                                p.Field("roadName.keyword").Value(roadName.Trim())
+                            );
+                        }
+
+                        return query;
+                    })
+                    // 3. 페이지네이션을 위해 고유한 순서로 정렬합니다.
+                    .Sort(so => so.Ascending("_id"))
+                    // 4. 다음 페이지를 위한 커서를 설정합니다.
+                    .SearchAfter(searchAfterValues)
+            );
+
+            // 응답 유효성 검사
+            OpensearchResponseHandler.CheckResponseFailed(
+                response?.ApiCall?.HttpStatusCode,
+                response?.ApiCall?.DebugInformation,
+                "GetAddress failed"
+            );
+
+            var documents = response!.Documents;
+            if (!documents.Any())
+            {
+                break;
+            }
+
+            addressList.AddRange(documents);
+
+            // 다음 페이지를 위해 커서를 업데이트합니다.
+            searchAfterValues = response.Hits.LastOrDefault()?.Sorts;
+        } while (searchAfterValues != null && searchAfterValues.Any());
+
+        return addressList;
+    }
+
+    public async Task<bool> HasGeocode(
         string si,
         string gu,
         string roadName,
@@ -233,7 +283,7 @@ public class LocationRepository : ILocationRepository
         return getResponse?.Found ?? false;
     }
 
-    public async ValueTask UpsertGeocode(GeocodeModel geocodeModel, string indexName = "geocode")
+    public async Task UpsertGeocode(GeocodeModel geocodeModel, string indexName = "geocode")
     {
         var id = IdGenerator.GenerateDeterministicId(
             geocodeModel.Si,
@@ -243,7 +293,7 @@ public class LocationRepository : ILocationRepository
         await opensearchClient.IndexAsync(geocodeModel, i => i.Index(indexName).Id(id));
     }
 
-    public async ValueTask<int> GetGeocodeCount(string indexName = "geocode")
+    public async Task<int> GetGeocodeCount(string indexName = "geocode")
     {
         var response = await opensearchClient.CountAsync<GeocodeModel>(c => c.Index(indexName));
         OpensearchResponseHandler.CheckResponseFailed(
