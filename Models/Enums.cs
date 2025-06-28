@@ -13,3 +13,17 @@ public enum VillanonoDataType
     /// </summary>
     Rent,
 }
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum AddressType
+{
+    /// <summary>
+    /// 도로명 검색
+    /// </summary>
+    Road,
+
+    /// <summary>
+    /// 지번(지번주소) 검색
+    /// </summary>
+    Parcel,
+}

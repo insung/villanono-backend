@@ -72,7 +72,7 @@ public class LocationRepository : ILocationRepository
             "GetAllSi Failed"
         );
 
-        var result = response
+        var result = response!
             .Aggregations.Terms("dong")
             .Buckets.Select(bucket => bucket.Key)
             .ToList();
@@ -96,7 +96,7 @@ public class LocationRepository : ILocationRepository
             "GetAllSi Failed"
         );
 
-        var result = response
+        var result = response!
             .Aggregations.Terms("gu")
             .Buckets.Select(bucket => bucket.Key)
             .ToList();
@@ -124,7 +124,7 @@ public class LocationRepository : ILocationRepository
             "GetAllSi Failed"
         );
 
-        var result = response
+        var result = response!
             .Aggregations.Terms("si")
             .Buckets.Select(bucket => bucket.Key)
             .ToList();
@@ -206,7 +206,8 @@ public class LocationRepository : ILocationRepository
         IAddressQueryStrategy<T> strategy,
         string si,
         string gu = "",
-        string roadName = "",
+        string search = "",
+        AddressType addressType = AddressType.Road,
         string indexName = "geocode"
     )
         where T : AddressModel
@@ -230,11 +231,20 @@ public class LocationRepository : ILocationRepository
                             query &= q.Term(t => t.Field("gu.keyword").Value(gu.Trim()));
                         }
 
-                        if (!string.IsNullOrWhiteSpace(roadName))
+                        if (!string.IsNullOrWhiteSpace(search))
                         {
-                            query &= q.Prefix(p =>
-                                p.Field("roadName.keyword").Value(roadName.Trim())
-                            );
+                            if (addressType == AddressType.Parcel)
+                            {
+                                query &= q.Prefix(p =>
+                                    p.Field("dong.keyword").Value(search.Trim())
+                                );
+                            }
+                            else
+                            {
+                                query &= q.Prefix(p =>
+                                    p.Field("roadName.keyword").Value(search.Trim())
+                                );
+                            }
                         }
 
                         return query;

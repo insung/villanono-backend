@@ -53,14 +53,16 @@ public interface ILocationRepository
     /// <param name="queryStrategy"></param>
     /// <param name="Si"></param>
     /// <param name="Gu"></param>
-    /// <param name="roadName"></param>
+    /// <param name="search"></param>
+    /// <param name="addressType"></param>
     /// <param name="indexName"></param>
     /// <returns></returns>
     Task<IList<T>> GetAddress<T>(
         IAddressQueryStrategy<T> queryStrategy,
         string Si,
         string Gu = "",
-        string roadName = "",
+        string search = "",
+        AddressType addressType = AddressType.Road,
         string indexName = "geocode"
     )
         where T : AddressModel;

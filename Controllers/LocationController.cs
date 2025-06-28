@@ -92,7 +92,7 @@ public class LocationController : ControllerBase
     /// <param name="gu"></param>
     /// <param name="roadName"></param>
     /// <returns></returns>
-    [HttpGet("GetAddress")]
+    [HttpGet("Address")]
     public async Task<IActionResult> GetAddress(
         [FromQuery] string si = "서울특별시",
         [FromQuery] string gu = "",
@@ -109,17 +109,25 @@ public class LocationController : ControllerBase
     /// </summary>
     /// <param name="si"></param>
     /// <param name="gu"></param>
-    /// <param name="roadName"></param>
+    /// <param name="search"></param>
+    /// <param name="addressType"></param>
     /// <returns></returns>
-    [HttpGet("GetGeocode")]
+    [HttpGet("Geocode")]
     public async Task<IActionResult> GetGeocode(
         [FromQuery] string si = "서울특별시",
         [FromQuery] string gu = "",
-        [FromQuery] string roadName = ""
+        [FromQuery] string search = "",
+        [FromQuery] AddressType addressType = AddressType.Road
     )
     {
         var geocodeStrategy = new GeocodeModelQueryStrategy();
-        var geocodeList = await locationRepository.GetAddress(geocodeStrategy, si, gu, roadName);
+        var geocodeList = await locationRepository.GetAddress(
+            geocodeStrategy,
+            si,
+            gu,
+            search,
+            addressType
+        );
         return Ok(geocodeList);
     }
 
@@ -127,7 +135,7 @@ public class LocationController : ControllerBase
     /// 지오코드 정보의 개수를 반환하는 API
     /// </summary>
     /// <returns></returns>
-    [HttpGet("GetGeocodeCount")]
+    [HttpGet("GeocodeCount")]
     public async Task<IActionResult> GetGeocodeCount()
     {
         var count = await locationRepository.GetGeocodeCount();
