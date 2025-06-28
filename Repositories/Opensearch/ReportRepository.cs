@@ -50,7 +50,10 @@ public class ReportRepository : IReportRepository
                         Interval = 1,
                         Aggregations = new AggregationDictionary
                         {
-                            { "stats", new StatsAggregation("stats", "transactionAmount") },
+                            {
+                                "extendedStats",
+                                new ExtendedStatsAggregation("extendedStats", "transactionAmount")
+                            },
                             {
                                 "percentiles",
                                 new PercentilesAggregation("percentiles", "transactionAmount")
@@ -61,7 +64,7 @@ public class ReportRepository : IReportRepository
                         },
                     }
                 },
-                { "totalStats", new StatsAggregation("totalStats", "transactionAmount") },
+                { "totalStats", new ExtendedStatsAggregation("totalStats", "transactionAmount") },
                 {
                     "totalPercentiles",
                     new PercentilesAggregation("totalPercentiles", "transactionAmount")
@@ -87,6 +90,7 @@ public class ReportRepository : IReportRepository
         var totalStats = response.Aggregations.ExtendedStats("totalStats");
         var totalPercentiles = response.Aggregations.Percentiles("totalPercentiles");
         var contractDateGroup = response.Aggregations.Histogram("contractDateGroup");
+
         return new InsightReportDailyModel(
             beginDate,
             endDate,
