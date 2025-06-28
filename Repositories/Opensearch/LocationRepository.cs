@@ -30,7 +30,7 @@ public class LocationRepository : ILocationRepository
             record =>
             {
                 var id = $"{record.Si}-{record.Gu}-{record.Dong}";
-                var locationRecord = new LocationModel(
+                var locationRecord = new RegionModel(
                     si: record.Si,
                     gu: record.Gu,
                     dong: record.Dong
@@ -50,7 +50,7 @@ public class LocationRepository : ILocationRepository
         string indexName = "si-gu-dong"
     )
     {
-        var response = await opensearchClient.SearchAsync<LocationModel>(s =>
+        var response = await opensearchClient.SearchAsync<RegionModel>(s =>
             s.Index(indexName)
                 .Size(0) // 결과 문서는 필요하지 않으므로 Size 0
                 .Query(q =>
@@ -81,7 +81,7 @@ public class LocationRepository : ILocationRepository
 
     public async Task<IList<string>> GetAllGu(string si, string indexName = "si-gu-dong")
     {
-        var response = await opensearchClient.SearchAsync<LocationModel>(s =>
+        var response = await opensearchClient.SearchAsync<RegionModel>(s =>
             s.Index(indexName)
                 .Size(0) // 결과 문서는 필요하지 않으므로 Size 0
                 .Query(q => q.Term(t => t.Field(f => f.Si.Suffix("keyword")).Value(si)))
@@ -105,7 +105,7 @@ public class LocationRepository : ILocationRepository
 
     public async Task<IList<string>> GetAllSi(string indexName = "si-gu-dong")
     {
-        var response = await opensearchClient.SearchAsync<LocationModel>(s =>
+        var response = await opensearchClient.SearchAsync<RegionModel>(s =>
             s.Index(indexName)
                 .Size(0) // 결과 문서는 필요하지 않으므로 Size 0
                 .Aggregations(a =>
@@ -303,7 +303,7 @@ public class LocationRepository : ILocationRepository
         await opensearchClient.IndexAsync(geocodeModel, i => i.Index(indexName).Id(id));
     }
 
-    public async Task<int> GetGeocodeCount(string indexName = "geocode")
+    public async Task<int> GetTotalCount(string indexName = "geocode")
     {
         var response = await opensearchClient.CountAsync<GeocodeModel>(c => c.Index(indexName));
         OpensearchResponseHandler.CheckResponseFailed(

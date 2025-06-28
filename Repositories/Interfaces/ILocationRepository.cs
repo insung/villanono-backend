@@ -90,5 +90,14 @@ public interface ILocationRepository
     /// </summary>
     /// <param name="indexName"></param>
     /// <returns></returns>
-    Task<int> GetGeocodeCount(string indexName = "geocode");
+    Task<int> GetTotalCount(string indexName = "geocode");
+
+    // Task<IList<BuildingModel>> GetGeocodeWithBuilding(
+    //     double minLatitude,
+    //     double maxLatitude,
+    //     double minLongitude,
+    //     double maxLongitude,
+    //     VillanonoDataType dataType,
+    //     string indexName = "geocode"
+    // );
 }

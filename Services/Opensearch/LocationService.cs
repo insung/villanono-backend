@@ -25,7 +25,7 @@ public class LocationService : ILocationService
         this.vworldSettingsModel = vworldSettingsModel.Value;
     }
 
-    public async Task BulkInsertLocations<T>(Stream stream)
+    public async Task BulkInsertRegions<T>(Stream stream)
         where T : VillanonoBaseModel
     {
         var records = new List<T>();
@@ -49,7 +49,7 @@ public class LocationService : ILocationService
         }
     }
 
-    public async Task BulkInsertGeocode(
+    public async Task BulkInsertAddress(
         IList<AddressModel> addressModels,
         int vWorldAPIRequestQuota = 1000
     )
