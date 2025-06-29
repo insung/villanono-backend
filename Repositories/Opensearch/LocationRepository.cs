@@ -133,6 +133,8 @@ public class LocationRepository : ILocationRepository
 
     public async Task<IList<AddressModel>> GetDistinctAddress(
         string si,
+        string gu = "",
+        string dong = "",
         string indexName = "villanono-*"
     )
     {
@@ -147,6 +149,19 @@ public class LocationRepository : ILocationRepository
                     .Query(q =>
                     {
                         QueryContainer query = q.Term(t => t.Field("si.keyword").Value(si.Trim()));
+
+                        // 2) gu 필터 (비어있지 않을 때만)
+                        if (!string.IsNullOrWhiteSpace(gu))
+                        {
+                            query &= q.Term(t => t.Field("gu.keyword").Value(gu.Trim()));
+                        }
+
+                        // 3) dong 필터 (비어있지 않을 때만)
+                        if (!string.IsNullOrWhiteSpace(dong))
+                        {
+                            query &= q.Term(t => t.Field("dong.keyword").Value(dong.Trim()));
+                        }
+
                         return query;
                     })
                     // 2. 필터링된 결과를 대상으로 집계를 수행합니다.
@@ -202,7 +217,57 @@ public class LocationRepository : ILocationRepository
         return allAddresses;
     }
 
-    public async Task<IList<T>> GetAddress<T>(
+    public async Task<long> GetDistinctAddressCardinalityCount(
+        string si,
+        string gu = "",
+        string dong = "",
+        string indexName = "villanono-*"
+    )
+    {
+        var response = await opensearchClient.SearchAsync<GeocodeModel>(s =>
+            s.Index(indexName)
+                .Size(0)
+                .Query(q =>
+                {
+                    // 기본 필터: si, gu, dong
+                    var qc = q.Term(t => t.Field("si.keyword").Value(si.Trim()));
+                    if (!string.IsNullOrWhiteSpace(gu))
+                        qc &= q.Term(t => t.Field("gu.keyword").Value(gu.Trim()));
+                    if (!string.IsNullOrWhiteSpace(dong))
+                        qc &= q.Term(t => t.Field("dong.keyword").Value(dong.Trim()));
+                    return qc;
+                })
+                .Aggregations(aggs =>
+                    aggs.Cardinality(
+                        // cardinality에 script를 써서 네 개 필드를 합쳐 고유 건수 계산
+                        "distinct_address_count",
+                        c =>
+                            c.Script(scr =>
+                                scr.Source(
+                                    """
+                                        doc['si.keyword'].value + '|' +
+                                        doc['gu.keyword'].value + '|' +
+                                        doc['dong.keyword'].value + '|' +
+                                        doc['roadName.keyword'].value
+                                    """
+                                )
+                            )
+                    )
+                )
+        );
+
+        OpensearchResponseHandler.CheckResponseFailed(
+            response.ApiCall.HttpStatusCode,
+            response.ApiCall.DebugInformation,
+            "GetDistinctAddressCount failed"
+        );
+
+        // distinct_address_count 에 저장된 값을 꺼내서 리턴
+        var card = response.Aggregations.Cardinality("distinct_address_count");
+        return Convert.ToInt64(card?.Value ?? 0);
+    }
+
+    public async Task<IList<T>> SearchGeocode<T>(
         IAddressQueryStrategy<T> strategy,
         string si,
         string gu = "",
@@ -303,14 +368,33 @@ public class LocationRepository : ILocationRepository
         await opensearchClient.IndexAsync(geocodeModel, i => i.Index(indexName).Id(id));
     }
 
-    public async Task<int> GetTotalCount(string indexName = "geocode")
+    public async Task<long> GetTotalCount(string indexName = "geocode")
     {
-        var response = await opensearchClient.CountAsync<GeocodeModel>(c => c.Index(indexName));
+        var response = await opensearchClient.CountAsync<AddressModel>(c => c.Index(indexName));
         OpensearchResponseHandler.CheckResponseFailed(
             response?.ApiCall?.HttpStatusCode,
             response?.ApiCall?.DebugInformation,
             "GetGeocodeCount failed"
         );
         return (int)response!.Count;
+    }
+
+    public async Task<T?> GetGeocode<T>(
+        string si,
+        string gu,
+        string roadName,
+        string indexName = "geocode"
+    )
+        where T : AddressModel
+    {
+        var id = IdGenerator.GenerateDeterministicId(si, gu, roadName);
+        var getResponse = await opensearchClient.GetAsync<T>(id, g => g.Index(indexName));
+
+        if (getResponse?.Found == true)
+        {
+            return getResponse.Source;
+        }
+
+        return null;
     }
 }

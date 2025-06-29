@@ -16,4 +16,13 @@ public interface ILocationService
     /// <param name="vWorldAPIRequestQuota"></param>
     /// <returns></returns>
     Task BulkInsertAddress(IList<AddressModel> addressModels, int vWorldAPIRequestQuota = 1000);
+
+    /// <summary>
+    /// AddressModel 을 가져오고 위도, 경도 정보를 VWorld API를 통해 GeocodeModel 을 가져오는 메서드
+    /// </summary>
+    /// <param name="si">시 이름</param>
+    /// <param name="gu">구 이름</param>
+    /// <param name="roadName">도로명</param>
+    /// <returns>지오코드 모델</returns>
+    Task<GeocodeModel?> GetGeocodeWithVWorld(string si, string gu, string roadName);
 }

@@ -6,11 +6,17 @@ public class GeocodeController : ControllerBase
 {
     readonly ILocationRepository locationRepository;
     readonly IJobQueue jobQueue;
+    readonly ILocationService locationService;
 
-    public GeocodeController(ILocationRepository locationRepository, IJobQueue jobQueue)
+    public GeocodeController(
+        ILocationRepository locationRepository,
+        IJobQueue jobQueue,
+        ILocationService locationService
+    )
     {
         this.locationRepository = locationRepository;
         this.jobQueue = jobQueue;
+        this.locationService = locationService;
     }
 
     /// <summary>
@@ -21,8 +27,8 @@ public class GeocodeController : ControllerBase
     /// <param name="search"></param>
     /// <param name="addressType"></param>
     /// <returns></returns>
-    [HttpGet("Geocode")]
-    public async Task<IActionResult> GetGeocode(
+    [HttpGet("Search")]
+    public async Task<IActionResult> GetGeocodeBySearch(
         [FromQuery] string si = "서울특별시",
         [FromQuery] string gu = "",
         [FromQuery] string search = "",
@@ -39,7 +45,7 @@ public class GeocodeController : ControllerBase
         // );
         // return Ok(geocodeList);
         var strategy = new GeocodeModelQueryStrategy();
-        var geocodeList = await locationRepository.GetAddress(
+        var geocodeList = await locationRepository.SearchGeocode(
             strategy,
             si,
             gu,
@@ -60,15 +66,36 @@ public class GeocodeController : ControllerBase
         return Ok(count);
     }
 
+    [HttpGet("CardinalityCount")]
+    public async Task<IActionResult> GetCardinalityCount(
+        [FromQuery] string si = "서울특별시",
+        [FromQuery] string gu = "",
+        [FromQuery] string dong = "",
+        [FromQuery] string indexName = "villanono-*"
+    )
+    {
+        var count = await locationRepository.GetDistinctAddressCardinalityCount(
+            si,
+            gu,
+            dong,
+            indexName
+        );
+        return Ok(count);
+    }
+
     /// <summary>
     /// 지오코드 정보를 인덱스에 삽입하는 API
     /// </summary>
     /// <param name="si"></param>
+    /// <param name="gu"></param>
+    /// <param name="dong"></param>
     /// <param name="vWorldAPIRequestQuota"></param>
     /// <returns></returns>
     [HttpPost("StartInsertGeocode")]
     public async Task<IActionResult> StartInsertGeocode(
         [FromQuery] string si = "서울특별시",
+        [FromQuery] string gu = "",
+        [FromQuery] string dong = "",
         [FromQuery] int vWorldAPIRequestQuota = 1000
     )
     {
@@ -79,11 +106,26 @@ public class GeocodeController : ControllerBase
                 var repository = serviceProvider.GetRequiredService<ILocationRepository>();
                 var service = serviceProvider.GetRequiredService<ILocationService>();
 
-                var addressList = await repository.GetDistinctAddress(si);
+                var addressList = await repository.GetDistinctAddress(si, gu, dong);
                 await service.BulkInsertAddress(addressList, vWorldAPIRequestQuota);
             }
         );
 
         return Accepted("Job was queued successfully.");
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetGeocode(
+        [FromQuery] string gu,
+        [FromQuery] string roadName,
+        [FromQuery] string si = "서울특별시"
+    )
+    {
+        var geocode = await locationService.GetGeocodeWithVWorld(si, gu, roadName);
+        if (geocode == null)
+        {
+            return NotFound($"Geocode not found for {si} {gu} {roadName}");
+        }
+        return Ok(geocode);
     }
 }

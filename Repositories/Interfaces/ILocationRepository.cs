@@ -43,9 +43,31 @@ public interface ILocationRepository
     /// 빌라노노의 시, 구, 도로명에 대한 유니크한 주소 정보를 반환하는 메서드
     /// </summary>
     /// <param name="si"></param>
+    /// <param name="gu"></param>
+    /// <param name="dong"></param>
     /// <param name="indexName"></param>
     /// <returns></returns>
-    Task<IList<AddressModel>> GetDistinctAddress(string si, string indexName = "villanono-*");
+    Task<IList<AddressModel>> GetDistinctAddress(
+        string si,
+        string gu = "",
+        string dong = "",
+        string indexName = "villanono-*"
+    );
+
+    /// <summary>
+    /// 빌라노노의 시, 구, 도로명에 대한 유니크한 주소 카드리니티 개수를 반환하는 메서드
+    /// </summary>
+    /// <param name="si"></param>
+    /// <param name="gu"></param>
+    /// <param name="dong"></param>
+    /// <param name="indexName"></param>
+    /// <returns></returns>
+    Task<long> GetDistinctAddressCardinalityCount(
+        string si,
+        string gu = "",
+        string dong = "",
+        string indexName = "villanono-*"
+    );
 
     /// <summary>
     /// 전달받은 시, 구, 도로명에 대한 모든 주소 정보를 반환하는 메서드
@@ -57,7 +79,7 @@ public interface ILocationRepository
     /// <param name="addressType"></param>
     /// <param name="indexName"></param>
     /// <returns></returns>
-    Task<IList<T>> GetAddress<T>(
+    Task<IList<T>> SearchGeocode<T>(
         IAddressQueryStrategy<T> queryStrategy,
         string Si,
         string Gu = "",
@@ -86,18 +108,20 @@ public interface ILocationRepository
     Task UpsertGeocode(GeocodeModel geocodeModel, string indexName = "geocode");
 
     /// <summary>
-    /// 지오코드 총 개수를 반환하는 메서드
+    /// 지오코드 인덱스의 총 개수를 반환하는 메서드
     /// </summary>
     /// <param name="indexName"></param>
     /// <returns></returns>
-    Task<int> GetTotalCount(string indexName = "geocode");
+    Task<long> GetTotalCount(string indexName = "geocode");
 
-    // Task<IList<BuildingModel>> GetGeocodeWithBuilding(
-    //     double minLatitude,
-    //     double maxLatitude,
-    //     double minLongitude,
-    //     double maxLongitude,
-    //     VillanonoDataType dataType,
-    //     string indexName = "geocode"
-    // );
+    /// <summary>
+    /// 지오코드 정보를 가져오는 메서드
+    /// </summary>
+    /// <param name="si"></param>
+    /// <param name="gu"></param>
+    /// <param name="roadName"></param>
+    /// <param name="indexName"></param>
+    /// <returns></returns>
+    Task<T?> GetGeocode<T>(string si, string gu, string roadName, string indexName = "geocode")
+        where T : AddressModel;
 }
