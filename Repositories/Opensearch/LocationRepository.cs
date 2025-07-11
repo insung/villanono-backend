@@ -397,4 +397,43 @@ public class LocationRepository : ILocationRepository
 
         return null;
     }
+
+    public async Task<GeocodeModel?> GetAddressByGeocode(
+        double latitude,
+        double longitude,
+        string indexName = "geocode"
+    )
+    {
+        const double eps = 0.0001;
+
+        var searchResponse = await opensearchClient.SearchAsync<GeocodeModel>(s =>
+            s.Index(indexName)
+                .Size(1)
+                .Query(q =>
+                    q.Bool(b =>
+                        b.Must(
+                            mu =>
+                                mu.Range(t =>
+                                    t.Field(f => f.Latitude)
+                                        .GreaterThanOrEquals(latitude - eps)
+                                        .LessThanOrEquals(latitude + eps)
+                                ),
+                            mu =>
+                                mu.Range(t =>
+                                    t.Field(f => f.Longitude)
+                                        .GreaterThanOrEquals(longitude - eps)
+                                        .LessThanOrEquals(longitude + eps)
+                                )
+                        )
+                    )
+                )
+        );
+
+        if (searchResponse?.Documents.Any() == true)
+        {
+            return searchResponse.Documents.First();
+        }
+
+        return null;
+    }
 }

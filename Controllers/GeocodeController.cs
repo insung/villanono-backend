@@ -128,4 +128,14 @@ public class GeocodeController : ControllerBase
         }
         return Ok(geocode);
     }
+
+    [HttpGet("GetAddressByGeocode")]
+    public async Task<IActionResult> GetAddressByGeocode(
+        [FromQuery] double latitude,
+        [FromQuery] double longitude
+    )
+    {
+        var address = await locationRepository.GetAddressByGeocode(latitude, longitude);
+        return Ok(address);
+    }
 }

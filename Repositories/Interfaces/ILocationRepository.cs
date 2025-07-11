@@ -124,4 +124,17 @@ public interface ILocationRepository
     /// <returns></returns>
     Task<T?> GetGeocode<T>(string si, string gu, string roadName, string indexName = "geocode")
         where T : AddressModel;
+
+    /// <summary>
+    /// 위도, 경도로 주소 정보를 가져오는 메서드
+    /// </summary>
+    /// <param name="latitude"></param>
+    /// <param name="longitude"></param>
+    /// <param name="indexName"></param>
+    /// <returns></returns>
+    Task<GeocodeModel?> GetAddressByGeocode(
+        double latitude,
+        double longitude,
+        string indexName = "geocode"
+    );
 }
