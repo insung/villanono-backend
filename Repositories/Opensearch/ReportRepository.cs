@@ -13,33 +13,61 @@ public class ReportRepository : IReportRepository
         VillanonoDataType dataType,
         DateOnly beginDate,
         DateOnly endDate,
-        string dong,
-        string gu,
         string si = "서울특별시",
+        string? gu = null,
+        string? dong = null,
+        double? beginExclusiveArea = null,
+        double? endExclusiveArea = null,
+        int? beginConstructYear = null,
+        int? endConstructYear = null,
         string indexName = "villanono-*"
     )
     {
+        var filters = new List<QueryContainer>
+        {
+            new TermQuery { Field = "dataType", Value = (int)dataType },
+            new TermQuery { Field = "si.keyword", Value = si },
+            new DateRangeQuery
+            {
+                Field = "contractDate",
+                GreaterThanOrEqualTo = beginDate.ToString("yyyyMMdd"),
+                LessThanOrEqualTo = endDate.ToString("yyyyMMdd"),
+            },
+        };
+
+        if (!string.IsNullOrWhiteSpace(gu))
+        {
+            filters.Add(new TermQuery { Field = "gu.keyword", Value = gu });
+        }
+
+        if (!string.IsNullOrWhiteSpace(dong))
+        {
+            filters.Add(new TermQuery { Field = "dong.keyword", Value = dong });
+        }
+
+        if (beginExclusiveArea.HasValue || endExclusiveArea.HasValue)
+        {
+            var rangeQuery = new NumericRangeQuery { Field = "exclusiveArea" };
+            if (beginExclusiveArea.HasValue)
+                rangeQuery.GreaterThanOrEqualTo = beginExclusiveArea.Value;
+            if (endExclusiveArea.HasValue)
+                rangeQuery.LessThanOrEqualTo = endExclusiveArea.Value;
+            filters.Add(rangeQuery);
+        }
+
+        if (beginConstructYear.HasValue || endConstructYear.HasValue)
+        {
+            var rangeQuery = new NumericRangeQuery { Field = "constructionYear" };
+            if (beginConstructYear.HasValue)
+                rangeQuery.GreaterThanOrEqualTo = beginConstructYear.Value;
+            if (endConstructYear.HasValue)
+                rangeQuery.LessThanOrEqualTo = endConstructYear.Value;
+            filters.Add(rangeQuery);
+        }
+
         var searchRequest = new SearchRequest(indexName)
         {
-            Query = new BoolQuery
-            {
-                Must = new QueryContainer[]
-                {
-                    new TermQuery { Field = "dataType", Value = dataType },
-                    new MatchQuery { Field = "dong", Query = dong },
-                    new MatchQuery { Field = "gu", Query = gu },
-                    new MatchQuery { Field = "si", Query = si },
-                },
-                Filter = new QueryContainer[]
-                {
-                    new DateRangeQuery
-                    {
-                        Field = "contractDate",
-                        GreaterThanOrEqualTo = beginDate.ToString("yyyyMMdd"),
-                        LessThanOrEqualTo = endDate.ToString("yyyyMMdd"),
-                    },
-                },
-            },
+            Query = new BoolQuery { Filter = filters },
             Aggregations = new AggregationDictionary
             {
                 {
@@ -104,17 +132,20 @@ public class ReportRepository : IReportRepository
         VillanonoDataType dataType,
         int beginYearMonth,
         int endYearMonth,
-        string dong,
-        string gu,
         string si = "서울특별시",
-        double? exclusiveAreaBegin = null,
-        double? exclusiveAreaEnd = null,
-        int? constructionYear = null,
+        string? gu = null,
+        string? dong = null,
+        double? beginExclusiveArea = null,
+        double? endExclusiveArea = null,
+        int? beginConstructYear = null,
+        int? endConstructYear = null,
         string indexName = "villanono-*"
     )
     {
         var filters = new List<QueryContainer>
         {
+            new TermQuery { Field = "dataType", Value = (int)dataType },
+            new TermQuery { Field = "si.keyword", Value = si },
             new NumericRangeQuery
             {
                 Field = "contractYearMonth",
@@ -123,42 +154,39 @@ public class ReportRepository : IReportRepository
             },
         };
 
-        if (exclusiveAreaBegin != null && exclusiveAreaEnd != null)
+        if (!string.IsNullOrWhiteSpace(gu))
         {
-            filters.Add(
-                new NumericRangeQuery
-                {
-                    Field = "exclusiveArea",
-                    GreaterThanOrEqualTo = exclusiveAreaBegin,
-                    LessThanOrEqualTo = exclusiveAreaEnd,
-                }
-            );
+            filters.Add(new TermQuery { Field = "gu.keyword", Value = gu });
         }
 
-        if (constructionYear != null)
+        if (!string.IsNullOrWhiteSpace(dong))
         {
-            filters.Add(
-                new NumericRangeQuery
-                {
-                    Field = "constructionYear",
-                    GreaterThanOrEqualTo = constructionYear,
-                }
-            );
+            filters.Add(new TermQuery { Field = "dong.keyword", Value = dong });
+        }
+
+        if (beginExclusiveArea.HasValue || endExclusiveArea.HasValue)
+        {
+            var rangeQuery = new NumericRangeQuery { Field = "exclusiveArea" };
+            if (beginExclusiveArea.HasValue)
+                rangeQuery.GreaterThanOrEqualTo = beginExclusiveArea.Value;
+            if (endExclusiveArea.HasValue)
+                rangeQuery.LessThanOrEqualTo = endExclusiveArea.Value;
+            filters.Add(rangeQuery);
+        }
+
+        if (beginConstructYear.HasValue || endConstructYear.HasValue)
+        {
+            var rangeQuery = new NumericRangeQuery { Field = "constructionYear" };
+            if (beginConstructYear.HasValue)
+                rangeQuery.GreaterThanOrEqualTo = beginConstructYear.Value;
+            if (endConstructYear.HasValue)
+                rangeQuery.LessThanOrEqualTo = endConstructYear.Value;
+            filters.Add(rangeQuery);
         }
 
         var searchRequest = new SearchRequest(indexName)
         {
-            Query = new BoolQuery
-            {
-                Must = new QueryContainer[]
-                {
-                    new TermQuery { Field = "dataType", Value = dataType },
-                    new MatchQuery { Field = "dong", Query = dong },
-                    new MatchQuery { Field = "gu", Query = gu },
-                    new MatchQuery { Field = "si", Query = si },
-                },
-                Filter = filters,
-            },
+            Query = new BoolQuery { Filter = filters },
             Aggregations = new AggregationDictionary
             {
                 {
