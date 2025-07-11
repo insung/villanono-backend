@@ -26,43 +26,6 @@ public class DataService : IDataService
         batchSize = elasticSearchSettings.Value.BatchSize;
     }
 
-    public async Task<IReadOnlyCollection<VillanonoBaseModel>> GetData(
-        VillanonoDataType dataType,
-        DateOnly beginDate,
-        DateOnly endDate,
-        string dong,
-        string gu,
-        string si = "서울특별시"
-    )
-    {
-        if (dataType == VillanonoDataType.BuySell)
-        {
-            return await dataRepository.GetData<BuySellModel>(
-                dataType,
-                beginDate,
-                endDate,
-                dong,
-                gu,
-                si
-            );
-        }
-        else if (dataType == VillanonoDataType.Rent)
-        {
-            return await dataRepository.GetData<RentModel>(
-                dataType,
-                beginDate,
-                endDate,
-                dong,
-                gu,
-                si
-            );
-        }
-        else
-        {
-            throw new ArgumentException("Invalid dataType");
-        }
-    }
-
     public async Task<int> BulkInsertData<T>(Stream stream, string indexName)
         where T : VillanonoBaseModel
     {

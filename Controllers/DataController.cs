@@ -5,18 +5,24 @@ using Microsoft.AspNetCore.Mvc;
 public class DataController : ControllerBase
 {
     readonly IDataService dataService;
+    readonly IDataRepository dataRepository;
 
-    public DataController(IDataService dataService)
+    public DataController(IDataService dataService, IDataRepository dataRepository)
     {
         this.dataService = dataService;
+        this.dataRepository = dataRepository;
     }
 
     /// <summary>
     /// 빌라노노 데이터 가져오기
     /// </summary>
     /// <param name="dataType">데이터타입</param>
-    /// <param name="beginDate">시작일 (yyyy-MM-dd)</param>
-    /// <param name="endDate">종료일 (yyyy-MM-dd)</param>
+    /// <param name="beginContractDate">계약일자 시작일 (yyyy-MM-dd)</param>
+    /// <param name="endContractDate">계약일자 종료일 (yyyy-MM-dd)</param>
+    /// <param name="beginTransactionAmount"></param>
+    /// <param name="endTransactionAmount"></param>
+    /// <param name="constructYear"></param>
+    /// <param name="exclusiveArea"></param>
     /// <param name="dong">동</param>
     /// <param name="gu">구</param>
     /// <param name="si">시</param>
@@ -24,15 +30,59 @@ public class DataController : ControllerBase
     [HttpGet("{dataType}")]
     public async Task<IActionResult> GetData(
         VillanonoDataType dataType,
-        [FromQuery] DateOnly beginDate,
-        [FromQuery] DateOnly endDate,
-        [FromQuery] string dong,
-        [FromQuery] string gu,
-        [FromQuery] string si = "서울특별시"
+        [FromQuery] string si = "서울특별시",
+        [FromQuery] string? dong = null,
+        [FromQuery] string? gu = null,
+        [FromQuery] DateOnly? beginContractDate = null,
+        [FromQuery] DateOnly? endContractDate = null,
+        [FromQuery] double? beginTransactionAmount = null,
+        [FromQuery] double? endTransactionAmount = null,
+        [FromQuery] int? beginConstructYear = null,
+        [FromQuery] int? endConstructYear = null,
+        [FromQuery] double? beginExclusiveArea = null,
+        [FromQuery] double? endExclusiveArea = null
     )
     {
-        var models = await dataService.GetData(dataType, beginDate, endDate, dong, gu, si);
-        return Ok(models);
+        if (dataType == VillanonoDataType.BuySell)
+        {
+            var models = await dataRepository.SearchBySiGuDong<BuySellModel>(
+                new HashSet<VillanonoDataType> { dataType },
+                si,
+                gu,
+                dong,
+                beginContractDate,
+                endContractDate,
+                beginTransactionAmount,
+                endTransactionAmount,
+                beginConstructYear,
+                endConstructYear,
+                beginExclusiveArea,
+                endExclusiveArea
+            );
+            return Ok(models);
+        }
+        else if (dataType == VillanonoDataType.Rent)
+        {
+            var models = await dataRepository.SearchBySiGuDong<RentModel>(
+                new HashSet<VillanonoDataType> { dataType },
+                si,
+                gu,
+                dong,
+                beginContractDate,
+                endContractDate,
+                beginTransactionAmount,
+                endTransactionAmount,
+                beginConstructYear,
+                endConstructYear,
+                beginExclusiveArea,
+                endExclusiveArea
+            );
+            return Ok(models);
+        }
+        else
+        {
+            throw new ArgumentException("Invalid dataType");
+        }
     }
 
     /// <summary>
@@ -74,5 +124,20 @@ public class DataController : ControllerBase
         }
 
         return Ok(resultMsg);
+    }
+
+    [HttpGet("SearchByRoadName")]
+    public async Task<IActionResult> SearchByRoadName(
+        [FromQuery] string roadName,
+        [FromQuery] string buildingName,
+        [FromQuery] int? greaterThanContractDate
+    )
+    {
+        var models = await dataRepository.SearchByRoadName<BuySellModel>(
+            roadName,
+            buildingName,
+            greaterThanContractDate
+        );
+        return Ok(models);
     }
 }
