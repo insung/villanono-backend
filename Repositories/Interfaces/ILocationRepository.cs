@@ -137,4 +137,19 @@ public interface ILocationRepository
         double longitude,
         string indexName = "geocode"
     );
+
+    /// <summary>
+    /// 시, 구, 동에 해당하는 Geocode를 Bulk로 가져오는 메서드
+    /// </summary>
+    /// <param name="si"></param>
+    /// <param name="gu"></param>
+    /// <param name="dong"></param>
+    /// <param name="indexName"></param>
+    /// <returns></returns>
+    Task<IList<GeocodeModel>> GetDistinctGeocode(
+        string si,
+        string gu = "",
+        string dong = "",
+        string indexName = "geocode"
+    );
 }

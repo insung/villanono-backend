@@ -2,7 +2,11 @@ using CsvHelper.Configuration.Attributes;
 
 public class BuySellModel : VillanonoBaseModel
 {
-    public override VillanonoDataType DataType => VillanonoDataType.BuySell;
+    public override VillanonoDataType DataType
+    {
+        get => VillanonoDataType.BuySell;
+        set { } // 자식 클래스에서는 이 값을 변경할 수 없도록 setter를 비워둡니다.
+    }
 
     /// <summary>
     /// 대지권면적

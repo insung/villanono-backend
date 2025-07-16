@@ -114,6 +114,13 @@ public class GeocodeController : ControllerBase
         return Accepted("Job was queued successfully.");
     }
 
+    /// <summary>
+    /// 시, 구, 동, 도로명을 포함한 좌표를 가져오는 API
+    /// </summary>
+    /// <param name="gu"></param>
+    /// <param name="roadName"></param>
+    /// <param name="si"></param>
+    /// <returns></returns>
     [HttpGet]
     public async Task<IActionResult> GetGeocode(
         [FromQuery] string gu,
@@ -129,6 +136,12 @@ public class GeocodeController : ControllerBase
         return Ok(geocode);
     }
 
+    /// <summary>
+    /// 위도, 경도로 시, 구, 동, 도로명을 포함한 GeoCode 모델을 가져오는 API
+    /// </summary>
+    /// <param name="latitude"></param>
+    /// <param name="longitude"></param>
+    /// <returns></returns>
     [HttpGet("GetAddressByGeocode")]
     public async Task<IActionResult> GetAddressByGeocode(
         [FromQuery] double latitude,

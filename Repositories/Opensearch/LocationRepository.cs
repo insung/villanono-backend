@@ -436,4 +436,58 @@ public class LocationRepository : ILocationRepository
 
         return null;
     }
+
+    public async Task<IList<GeocodeModel>> GetDistinctGeocode(
+        string si,
+        string gu = "",
+        string dong = "",
+        string indexName = "geocode"
+    )
+    {
+        var allGeocodes = new List<GeocodeModel>();
+        IReadOnlyCollection<object>? searchAfter = null;
+
+        do
+        {
+            var response = await opensearchClient.SearchAsync<GeocodeModel>(s =>
+                s.Index(indexName)
+                    .Size(1000)
+                    .Query(q =>
+                    {
+                        QueryContainer query = q.Term(t => t.Field("si.keyword").Value(si.Trim()));
+
+                        if (!string.IsNullOrWhiteSpace(gu))
+                        {
+                            query &= q.Term(t => t.Field("gu.keyword").Value(gu.Trim()));
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(dong))
+                        {
+                            query &= q.Term(t => t.Field("dong.keyword").Value(dong.Trim()));
+                        }
+
+                        return query;
+                    })
+                    .Sort(so => so.Ascending("_id"))
+                    .SearchAfter(searchAfter)
+            );
+
+            OpensearchResponseHandler.CheckResponseFailed(
+                response?.ApiCall?.HttpStatusCode,
+                response?.ApiCall?.DebugInformation,
+                "GetDistinctGeocode failed"
+            );
+
+            if (response?.Documents == null || !response.Documents.Any())
+            {
+                break;
+            }
+
+            allGeocodes.AddRange(response.Documents);
+
+            searchAfter = response.Hits.LastOrDefault()?.Sorts;
+        } while (searchAfter != null && searchAfter.Any());
+
+        return allGeocodes;
+    }
 }

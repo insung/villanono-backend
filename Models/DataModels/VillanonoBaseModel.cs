@@ -1,6 +1,6 @@
 using CsvHelper.Configuration.Attributes;
 
-public abstract class VillanonoBaseModel
+public class VillanonoBaseModel
 {
     /// <summary>
     /// 시
@@ -92,5 +92,5 @@ public abstract class VillanonoBaseModel
     [Name("contract_date")]
     public int ContractDate { get; set; }
 
-    public abstract VillanonoDataType DataType { get; }
+    public virtual VillanonoDataType DataType { get; set; }
 }
