@@ -87,6 +87,22 @@ public class DataController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// 빌라노노 데이터 검색하기 (위치정보 포함)
+    /// </summary>
+    /// <param name="dataTypes"></param>
+    /// <param name="si"></param>
+    /// <param name="dong"></param>
+    /// <param name="gu"></param>
+    /// <param name="beginContractDate"></param>
+    /// <param name="endContractDate"></param>
+    /// <param name="beginTransactionAmount"></param>
+    /// <param name="endTransactionAmount"></param>
+    /// <param name="beginConstructYear"></param>
+    /// <param name="endConstructYear"></param>
+    /// <param name="beginExclusiveArea"></param>
+    /// <param name="endExclusiveArea"></param>
+    /// <returns></returns>
     [HttpGet("SearchWithGeocode")]
     public async Task<IActionResult> SearchWithGeocode(
         [FromQuery] HashSet<VillanonoDataType> dataTypes,
