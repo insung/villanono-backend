@@ -21,8 +21,10 @@ public class DataController : ControllerBase
     /// <param name="endContractDate">계약일자 종료일 (yyyy-MM-dd)</param>
     /// <param name="beginTransactionAmount"></param>
     /// <param name="endTransactionAmount"></param>
-    /// <param name="constructYear"></param>
-    /// <param name="exclusiveArea"></param>
+    /// <param name="beginConstructYear"></param>
+    /// <param name="endConstructYear"></param>
+    /// <param name="beginExclusiveArea"></param>
+    /// <param name="endExclusiveArea"></param>
     /// <param name="dong">동</param>
     /// <param name="gu">구</param>
     /// <param name="si">시</param>
@@ -83,6 +85,40 @@ public class DataController : ControllerBase
         {
             throw new ArgumentException("Invalid dataType");
         }
+    }
+
+    [HttpGet("SearchWithGeocode")]
+    public async Task<IActionResult> SearchWithGeocode(
+        [FromQuery] HashSet<VillanonoDataType> dataTypes,
+        [FromQuery] string si = "서울특별시",
+        [FromQuery] string? dong = null,
+        [FromQuery] string? gu = null,
+        [FromQuery] DateOnly? beginContractDate = null,
+        [FromQuery] DateOnly? endContractDate = null,
+        [FromQuery] double? beginTransactionAmount = null,
+        [FromQuery] double? endTransactionAmount = null,
+        [FromQuery] int? beginConstructYear = null,
+        [FromQuery] int? endConstructYear = null,
+        [FromQuery] double? beginExclusiveArea = null,
+        [FromQuery] double? endExclusiveArea = null
+    )
+    {
+        var result = await dataService.Search(
+            dataTypes,
+            si,
+            gu,
+            dong,
+            beginContractDate,
+            endContractDate,
+            beginTransactionAmount,
+            endTransactionAmount,
+            beginConstructYear,
+            endConstructYear,
+            beginExclusiveArea,
+            endExclusiveArea
+        );
+
+        return Ok(result);
     }
 
     /// <summary>

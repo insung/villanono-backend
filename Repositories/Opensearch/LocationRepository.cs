@@ -490,4 +490,37 @@ public class LocationRepository : ILocationRepository
 
         return allGeocodes;
     }
+
+    public async Task<IList<GeocodeModel>> GetGeocodeList(
+        List<AddressModel> addressModels,
+        string indexName = "geocode"
+    )
+    {
+        if (addressModels == null || !addressModels.Any())
+        {
+            return Array.Empty<GeocodeModel>();
+        }
+
+        var idList = addressModels
+            .Select(addressmodel =>
+                IdGenerator.GenerateDeterministicId(
+                    addressmodel.Si,
+                    addressmodel.Gu,
+                    addressmodel.RoadName
+                )
+            )
+            .ToList();
+
+        var response = await opensearchClient.SearchAsync<GeocodeModel>(s =>
+            s.Index(indexName).Query(q => q.Ids(i => i.Values(idList))).Size(idList.Count)
+        );
+
+        OpensearchResponseHandler.CheckResponseFailed(
+            response.ApiCall.HttpStatusCode,
+            response.ApiCall.DebugInformation,
+            "GetGeocodeList failed"
+        );
+
+        return response.Documents.ToList();
+    }
 }

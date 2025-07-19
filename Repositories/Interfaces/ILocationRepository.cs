@@ -152,4 +152,15 @@ public interface ILocationRepository
         string dong = "",
         string indexName = "geocode"
     );
+
+    /// <summary>
+    /// addressModel 의 Si, Gu, RoadName 정보로 위도, 경도가 포함된 GeocodeModel 을 Bulk 로 가져오는 메서드
+    /// </summary>
+    /// <param name="addressModels"></param>
+    /// <param name="indexName"></param>
+    /// <returns></returns>
+    Task<IList<GeocodeModel>> GetGeocodeList(
+        List<AddressModel> addressModels,
+        string indexName = "geocode"
+    );
 }
