@@ -22,8 +22,10 @@ public interface IDataRepository
     /// <param name="endContractDate"></param>
     /// <param name="beginTransactionAmount"></param>
     /// <param name="endTransactionAmount"></param>
-    /// <param name="constructYear"></param>
-    /// <param name="exclusiveArea"></param>
+    /// <param name="beginConstructYear"></param>
+    /// <param name="endConstructYear"></param>
+    /// <param name="beginExclusiveArea"></param>
+    /// <param name="endExclusiveArea"></param>
     /// <param name="indexName"></param>
     /// <returns></returns>
     Task<IReadOnlyCollection<T>> SearchBySiGuDong<T>(

@@ -6,25 +6,25 @@ public class VillanonoBaseModel
     /// 시
     /// </summary>
     [Name("si")]
-    public string Si { get; set; }
+    public required string Si { get; set; }
 
     /// <summary>
     /// 구
     /// </summary>
     [Name("gu")]
-    public string Gu { get; set; }
+    public required string Gu { get; set; }
 
     /// <summary>
     /// 동
     /// </summary>
     [Name("dong")]
-    public string Dong { get; set; }
+    public required string Dong { get; set; }
 
     /// <summary>
     /// 번지
     /// </summary>
     [Name("address_number")]
-    public string AddressNumber { get; set; }
+    public string? AddressNumber { get; set; }
 
     /// <summary>
     /// 본번
@@ -42,7 +42,7 @@ public class VillanonoBaseModel
     /// 건물명
     /// </summary>
     [Name("building_name")]
-    public string BuildingName { get; set; }
+    public string? BuildingName { get; set; }
 
     /// <summary>
     /// 전용면적
@@ -78,7 +78,7 @@ public class VillanonoBaseModel
     /// 도로명
     /// </summary>
     [Name("road_name")]
-    public string RoadName { get; set; }
+    public required string RoadName { get; set; }
 
     /// <summary>
     /// 층
