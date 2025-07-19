@@ -21,10 +21,7 @@ public class IndexManagementRepository : IIndexManagementRepository
     public async ValueTask CreateDataIndex<T>(string indexName)
         where T : VillanonoBaseModel
     {
-        var response = await opensearchClient.Indices.CreateAsync(
-            indexName,
-            c => c.Map<T>(m => m.Properties(p => p.Text(t => t.Name(n => n.AddressNumber))))
-        );
+        var response = await opensearchClient.Indices.CreateAsync(indexName);
         OpensearchResponseHandler.CheckResponseFailed(
             response?.ApiCall?.HttpStatusCode,
             response?.ApiCall?.DebugInformation,

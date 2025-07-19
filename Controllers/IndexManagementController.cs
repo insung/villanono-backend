@@ -76,6 +76,10 @@ public class IndexManagementController : ControllerBase
         return Ok();
     }
 
+    /// <summary>
+    /// 기본 Template 생성
+    /// </summary>
+    /// <returns></returns>
     [HttpPost("DefaultTemplate")]
     public async Task<IActionResult> CreateTemplate()
     {
@@ -83,6 +87,10 @@ public class IndexManagementController : ControllerBase
         return Ok("Default index template created successfully.");
     }
 
+    /// <summary>
+    /// 기본 Template 가져오기
+    /// </summary>
+    /// <returns></returns>
     [HttpGet("DefaultTemplate")]
     public async Task<IActionResult> GetDefaultTemplate()
     {
@@ -91,6 +99,11 @@ public class IndexManagementController : ControllerBase
         return Ok(jsonObject);
     }
 
+    /// <summary>
+    /// 인덱스 매핑 가져오기
+    /// </summary>
+    /// <param name="indexName"></param>
+    /// <returns></returns>
     [HttpGet("Mapping/{indexName}")]
     public async Task<IActionResult> GetIndexMapping(string indexName)
     {
