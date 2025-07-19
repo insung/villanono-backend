@@ -16,6 +16,10 @@ public class VillanonoCsvReader : IVillanonoCsvReader
         };
 
         using var csv = new CsvReader(stream, csvOptions);
+
+        csv.Context.RegisterClassMap<BuySellModelMap>();
+        csv.Context.RegisterClassMap<RentModelMap>();
+
         csv.Context.TypeConverterCache.AddConverter<DateTime?>(new VillanonoDateTimeConverter());
         csv.Context.TypeConverterCache.AddConverter<string?>(new VillanonoStringConverter());
         csv.Context.TypeConverterCache.AddConverter<int?>(new VillanonoIntConverter());
