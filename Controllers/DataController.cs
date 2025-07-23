@@ -138,7 +138,7 @@ public class DataController : ControllerBase
     }
 
     /// <summary>
-    /// 빌라노노 데이터 Bulk Insert (위치정보도 갱신됨)
+    /// 빌라노노 데이터 Bulk Insert (시, 구, 동 정보도 갱신됨)
     /// </summary>
     /// <param name="fileUploadModels"></param>
     /// <returns></returns>
@@ -178,6 +178,13 @@ public class DataController : ControllerBase
         return Ok(resultMsg);
     }
 
+    /// <summary>
+    /// 주소명으로 빌라노노 데이터 조회
+    /// </summary>
+    /// <param name="roadName"></param>
+    /// <param name="buildingName"></param>
+    /// <param name="greaterThanContractDate"></param>
+    /// <returns></returns>
     [HttpGet("SearchByRoadName")]
     public async Task<IActionResult> SearchByRoadName(
         [FromQuery] string roadName,
@@ -185,7 +192,7 @@ public class DataController : ControllerBase
         [FromQuery] int? greaterThanContractDate
     )
     {
-        var models = await dataRepository.SearchByRoadName<BuySellModel>(
+        var models = await dataRepository.SearchByRoadName<VillanonoBaseModel>(
             roadName,
             buildingName,
             greaterThanContractDate
